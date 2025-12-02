@@ -30,7 +30,7 @@ class AlarmReceiver : BroadcastReceiver() {
         
         val fullScreenIntent = Intent(context, com.suvojeet.clock.ui.alarm.AlarmActivity::class.java).apply {
             putExtra("EXTRA_MESSAGE", message)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
         }
         val fullScreenPendingIntent = android.app.PendingIntent.getActivity(
             context,
@@ -50,5 +50,10 @@ class AlarmReceiver : BroadcastReceiver() {
             .build()
             
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        
+        // For older devices or if allowed, try to start activity directly
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            context.startActivity(fullScreenIntent)
+        }
     }
 }
