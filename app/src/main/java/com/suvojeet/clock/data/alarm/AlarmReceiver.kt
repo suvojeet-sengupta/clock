@@ -63,8 +63,12 @@ class AlarmReceiver : BroadcastReceiver() {
                 
             notificationManager.notify(System.currentTimeMillis().toInt(), notification)
             
-            // For older devices or if allowed, try to start activity directly
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            // Force start activity if we have the overlay permission, regardless of version
+            // This is critical for Android 10+ (Q) and especially Android 14/15
+            if (android.provider.Settings.canDrawOverlays(context)) {
+                 context.startActivity(fullScreenIntent)
+            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                // Fallback for very old devices without overlay requirement
                 context.startActivity(fullScreenIntent)
             }
         } finally {
