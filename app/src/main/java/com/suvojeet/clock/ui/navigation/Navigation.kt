@@ -1,0 +1,17 @@
+package com.suvojeet.clock.ui.navigation
+
+import kotlinx.serialization.Serializable
+
+sealed class Screen {
+    @Serializable
+    object Clock : Screen()
+
+    @Serializable
+    object Alarm : Screen()
+
+    @Serializable
+    object Timer : Screen()
+
+    @Serializable
+    object Stopwatch : Screen()
+}
