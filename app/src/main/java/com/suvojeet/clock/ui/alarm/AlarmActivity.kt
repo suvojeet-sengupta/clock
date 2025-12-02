@@ -54,6 +54,8 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun turnScreenOnAndKeyguard() {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -61,7 +63,6 @@ class AlarmActivity : ComponentActivity() {
             keyguardManager.requestDismissKeyguard(this, null)
         } else {
             window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
