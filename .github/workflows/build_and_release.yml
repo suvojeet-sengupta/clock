@@ -120,4 +120,4 @@ jobs:
         files: |
           ${{ env.APK_TO_UPLOAD }}
           ${{ env.AAB_TO_UPLOAD }}
-        overwrite: true
+
