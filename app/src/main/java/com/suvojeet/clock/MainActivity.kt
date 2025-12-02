@@ -47,6 +47,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        checkPermissions()
+
+        setContent {
+            CosmicTheme {
+                MainScreen()
+            }
+        }
+    }
+
+    private fun checkPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             val permission = android.Manifest.permission.POST_NOTIFICATIONS
             if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -54,9 +64,24 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        setContent {
-            CosmicTheme {
-                MainScreen()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(android.app.AlarmManager::class.java)
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = android.content.Intent(
+                    android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    android.net.Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
+            }
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                val intent = android.content.Intent(
+                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
             }
         }
     }

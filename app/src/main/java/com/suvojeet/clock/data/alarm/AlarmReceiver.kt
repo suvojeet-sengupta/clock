@@ -17,18 +17,25 @@ class AlarmReceiver : BroadcastReceiver() {
 
         try {
             val message = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
-            val channelId = "alarm_channel"
+            val channelId = "alarm_channel_high_priority"
             
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val audioAttributes = android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+
                 val channel = NotificationChannel(
                     channelId,
-                    "Alarm Channel",
+                    "High Priority Alarm Channel",
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Channel for Alarm Manager"
                     enableVibration(true)
+                    setSound(android.provider.Settings.System.DEFAULT_ALARM_ALERT_URI, audioAttributes)
+                    lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 }
                 notificationManager.createNotificationChannel(channel)
             }
