@@ -72,8 +72,15 @@ fun MainScreen() {
             } == true
 
             if (isMainScreen) {
+                val title = when {
+                    currentDestination?.hasRoute<Screen.Clock>() == true -> "Clock"
+                    currentDestination?.hasRoute<Screen.Alarm>() == true -> "Alarm"
+                    currentDestination?.hasRoute<Screen.Timer>() == true -> "Timer"
+                    currentDestination?.hasRoute<Screen.Stopwatch>() == true -> "Stopwatch"
+                    else -> "Clock"
+                }
                 TopAppBar(
-                    title = { Text("Clock") },
+                    title = { Text(title) },
                     actions = {
                         IconButton(onClick = { showMenu = !showMenu }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "More options")
