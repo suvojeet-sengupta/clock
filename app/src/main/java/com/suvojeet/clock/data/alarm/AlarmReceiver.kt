@@ -28,13 +28,25 @@ class AlarmReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
         
+        val fullScreenIntent = Intent(context, com.suvojeet.clock.ui.alarm.AlarmActivity::class.java).apply {
+            putExtra("EXTRA_MESSAGE", message)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val fullScreenPendingIntent = android.app.PendingIntent.getActivity(
+            context,
+            0,
+            fullScreenIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Ensure this resource exists, or use a system icon
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("Alarm")
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .build()
             
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
