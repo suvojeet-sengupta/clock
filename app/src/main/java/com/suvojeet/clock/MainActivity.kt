@@ -10,12 +10,22 @@ import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -44,54 +54,99 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
+    var showMenu by remember { mutableStateOf(false) }
     
     Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                
-                val items = listOf(
-                    Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
-                    Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
-                    Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
-                    Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
-                )
+        topBar = {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            
+            // Show TopAppBar only on main screens, not on Settings (Settings has its own)
+            val isMainScreen = currentDestination?.hierarchy?.any { 
+                it.hasRoute<Screen.Clock>() || it.hasRoute<Screen.Alarm>() || 
+                it.hasRoute<Screen.Timer>() || it.hasRoute<Screen.Stopwatch>()
+            } == true
 
-                items.forEach { (screen, icon, label) ->
-                    NavigationBarItem(
-                        icon = { Icon(icon, contentDescription = label) },
-                        label = { 
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                            ) 
-                        },
-                        selected = currentDestination?.hierarchy?.any { it.hasRoute(screen::class) } == true,
-                        onClick = {
-                            navController.navigate(screen) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (isMainScreen) {
+                TopAppBar(
+                    title = { Text("Clock") },
+                    actions = {
+                        IconButton(onClick = { showMenu = !showMenu }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Settings") },
+                                onClick = {
+                                    showMenu = false
+                                    navController.navigate(Screen.Settings)
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
+                )
+            }
+        },
+        bottomBar = {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            
+            // Hide BottomBar on Settings screen
+            val isSettings = currentDestination?.hasRoute<Screen.Settings>() == true
+            
+            if (!isSettings) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    val items = listOf(
+                        Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
+                        Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
+                        Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
+                        Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
+                    )
+
+                    items.forEach { (screen, icon, label) ->
+                        NavigationBarItem(
+                            icon = { Icon(icon, contentDescription = label) },
+                            label = { 
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                ) 
+                            },
+                            selected = currentDestination?.hierarchy?.any { it.hasRoute(screen::class) } == true,
+                            onClick = {
+                                navController.navigate(screen) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -105,6 +160,11 @@ fun MainScreen() {
             composable<Screen.Alarm> { AlarmScreen() }
             composable<Screen.Timer> { TimerScreen() }
             composable<Screen.Stopwatch> { StopwatchScreen() }
+            composable<Screen.Settings> { 
+                com.suvojeet.clock.ui.settings.SettingsScreen(
+                    onBackClick = { navController.popBackStack() }
+                ) 
+            }
         }
     }
 }

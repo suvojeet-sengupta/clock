@@ -3,9 +3,11 @@ package com.suvojeet.clock
 import android.app.Application
 import androidx.room.Room
 import com.suvojeet.clock.data.alarm.AlarmDatabase
+import com.suvojeet.clock.data.settings.SettingsRepository
 
 class ClockApplication : Application() {
     lateinit var database: AlarmDatabase
+    lateinit var settingsRepository: SettingsRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -16,5 +18,7 @@ class ClockApplication : Application() {
         )
         .fallbackToDestructiveMigration()
         .build()
+        
+        settingsRepository = SettingsRepository(applicationContext)
     }
 }

@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.suvojeet.clock.ClockApplication
+import androidx.compose.ui.platform.LocalContext
 import com.suvojeet.clock.ui.theme.ElectricBlue
 import com.suvojeet.clock.ui.theme.NebulaPurple
 import com.suvojeet.clock.ui.theme.NeonPink
@@ -36,8 +38,13 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun ClockScreen(viewModel: ClockViewModel = viewModel()) {
+fun ClockScreen() {
+    val context = LocalContext.current
+    val application = context.applicationContext as ClockApplication
+    val viewModel: ClockViewModel = viewModel(factory = ClockViewModelFactory(application.settingsRepository))
+    
     val currentTime by viewModel.currentTime.collectAsState()
+    val is24HourFormat by viewModel.is24HourFormat.collectAsState()
 
     Column(
         modifier = Modifier
@@ -48,7 +55,7 @@ fun ClockScreen(viewModel: ClockViewModel = viewModel()) {
     ) {
         AnalogClock(currentTime)
         Spacer(modifier = Modifier.height(32.dp))
-        DigitalClock(currentTime)
+        DigitalClock(currentTime, is24HourFormat)
     }
 }
 
@@ -151,10 +158,11 @@ fun AnalogClock(time: LocalTime) {
 }
 
 @Composable
-fun DigitalClock(time: LocalTime) {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
+    val pattern = if (is24HourFormat) "HH:mm:ss" else "hh:mm:ss a"
+    val formatter = DateTimeFormatter.ofPattern(pattern)
     Text(
-        text = time.format(formatter),
+        text = time.format(formatter).uppercase(),
         style = MaterialTheme.typography.displayLarge,
         color = MaterialTheme.colorScheme.onBackground
     )

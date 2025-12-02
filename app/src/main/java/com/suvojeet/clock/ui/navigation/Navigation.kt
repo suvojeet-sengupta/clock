@@ -14,4 +14,7 @@ sealed class Screen {
 
     @Serializable
     object Stopwatch : Screen()
+
+    @Serializable
+    object Settings : Screen()
 }
