@@ -13,6 +13,8 @@ class ClockApplication : Application() {
             applicationContext,
             AlarmDatabase::class.java,
             "clock_database"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 }

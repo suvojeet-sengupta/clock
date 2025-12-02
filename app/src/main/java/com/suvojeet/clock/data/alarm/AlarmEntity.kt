@@ -10,5 +10,6 @@ data class AlarmEntity(
     val time: String, // Stored as "HH:mm"
     val label: String = "",
     val isEnabled: Boolean = true,
+    val isVibrateEnabled: Boolean = true,
     val daysOfWeek: List<Int> = emptyList() // 1=Monday, 7=Sunday
 )
