@@ -49,66 +49,49 @@ fun MainScreen() {
     
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Schedule, contentDescription = "Clock") },
-                    label = { Text("Clock") },
-                    selected = currentDestination?.hierarchy?.any { it.hasRoute<Screen.Clock>() } == true,
-                    onClick = {
-                        navController.navigate(Screen.Clock) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                val items = listOf(
+                    Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
+                    Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
+                    Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
+                    Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.AccessAlarm, contentDescription = "Alarm") },
-                    label = { Text("Alarm") },
-                    selected = currentDestination?.hierarchy?.any { it.hasRoute<Screen.Alarm>() } == true,
-                    onClick = {
-                        navController.navigate(Screen.Alarm) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+
+                items.forEach { (screen, icon, label) ->
+                    NavigationBarItem(
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { 
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            ) 
+                        },
+                        selected = currentDestination?.hierarchy?.any { it.hasRoute(screen::class) } == true,
+                        onClick = {
+                            navController.navigate(screen) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.HourglassEmpty, contentDescription = "Timer") },
-                    label = { Text("Timer") },
-                    selected = currentDestination?.hierarchy?.any { it.hasRoute<Screen.Timer>() } == true,
-                    onClick = {
-                        navController.navigate(Screen.Timer) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Timer, contentDescription = "Stopwatch") },
-                    label = { Text("Stopwatch") },
-                    selected = currentDestination?.hierarchy?.any { it.hasRoute<Screen.Stopwatch>() } == true,
-                    onClick = {
-                        navController.navigate(Screen.Stopwatch) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
+                        },
+                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                }
             }
         }
     ) { innerPadding ->

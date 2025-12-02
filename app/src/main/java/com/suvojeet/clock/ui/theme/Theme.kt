@@ -3,7 +3,9 @@ package com.suvojeet.clock.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -13,34 +15,50 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NebulaPurple,
-    secondary = ElectricBlue,
-    tertiary = NeonPink,
-    background = DeepSpaceBlack,
-    surface = StarryNightBlue,
+    primary = PrimaryExpressive,
     onPrimary = StarlightWhite,
+    primaryContainer = PrimaryExpressive.copy(alpha = 0.2f),
+    onPrimaryContainer = PrimaryExpressive,
+    
+    secondary = SecondaryExpressive,
     onSecondary = StarlightWhite,
+    secondaryContainer = SecondaryExpressive.copy(alpha = 0.2f),
+    onSecondaryContainer = SecondaryExpressive,
+    
+    tertiary = TertiaryExpressive,
     onTertiary = StarlightWhite,
+    tertiaryContainer = TertiaryExpressive.copy(alpha = 0.2f),
+    onTertiaryContainer = TertiaryExpressive,
+    
+    background = DeepSpaceBlack,
     onBackground = StarlightWhite,
+    
+    surface = SurfaceDark,
     onSurface = StarlightWhite,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = StarlightWhite,
+    
+    error = ErrorExpressive,
+    onError = StarlightWhite
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = PrimaryExpressive,
+    secondary = SecondaryExpressive,
+    tertiary = TertiaryExpressive
+    // Ideally we would define a full light theme, but Cosmic is dark-first.
+)
+
+val ExpressiveShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp) // Expressive large corners
 )
 
 @Composable
@@ -70,6 +88,7 @@ fun CosmicTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = ExpressiveShapes,
         content = content
     )
 }

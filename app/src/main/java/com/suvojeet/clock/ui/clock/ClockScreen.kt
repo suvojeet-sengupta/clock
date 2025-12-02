@@ -54,6 +54,12 @@ fun ClockScreen(viewModel: ClockViewModel = viewModel()) {
 
 @Composable
 fun AnalogClock(time: LocalTime) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
     Box(
         modifier = Modifier
             .size(300.dp)
@@ -61,7 +67,7 @@ fun AnalogClock(time: LocalTime) {
             .background(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surfaceVariant,
                         MaterialTheme.colorScheme.background
                     )
                 )
@@ -76,8 +82,8 @@ fun AnalogClock(time: LocalTime) {
             for (i in 0 until 60) {
                 val angle = i * 6f
                 val isHour = i % 5 == 0
-                val length = if (isHour) 20.dp.toPx() else 10.dp.toPx()
-                val color = if (isHour) ElectricBlue else Color.Gray.copy(alpha = 0.5f)
+                val length = if (isHour) 24.dp.toPx() else 12.dp.toPx() // Longer ticks
+                val color = if (isHour) primaryColor else onSurfaceColor.copy(alpha = 0.3f)
                 val strokeWidth = if (isHour) 4.dp.toPx() else 2.dp.toPx()
 
                 val start = center + Offset(
@@ -102,10 +108,10 @@ fun AnalogClock(time: LocalTime) {
             val hourAngle = (time.hour % 12 + time.minute / 60f) * 30f
             rotate(hourAngle) {
                 drawLine(
-                    color = NebulaPurple,
+                    color = primaryColor,
                     start = center,
                     end = center - Offset(0f, radius * 0.5f),
-                    strokeWidth = 8.dp.toPx(),
+                    strokeWidth = 10.dp.toPx(), // Thicker
                     cap = StrokeCap.Round
                 )
             }
@@ -114,7 +120,7 @@ fun AnalogClock(time: LocalTime) {
             val minuteAngle = (time.minute + time.second / 60f) * 6f
             rotate(minuteAngle) {
                 drawLine(
-                    color = ElectricBlue,
+                    color = secondaryColor,
                     start = center,
                     end = center - Offset(0f, radius * 0.7f),
                     strokeWidth = 6.dp.toPx(),
@@ -126,18 +132,18 @@ fun AnalogClock(time: LocalTime) {
             val secondAngle = time.second * 6f
             rotate(secondAngle) {
                 drawLine(
-                    color = NeonPink,
+                    color = tertiaryColor,
                     start = center,
                     end = center - Offset(0f, radius * 0.85f),
-                    strokeWidth = 2.dp.toPx(),
+                    strokeWidth = 3.dp.toPx(),
                     cap = StrokeCap.Round
                 )
             }
 
             // Center Dot
             drawCircle(
-                color = NeonPink,
-                radius = 6.dp.toPx(),
+                color = tertiaryColor,
+                radius = 8.dp.toPx(),
                 center = center
             )
         }
