@@ -65,7 +65,11 @@ fun ClockScreen() {
     val currentTime by viewModel.currentTime.collectAsState()
     val is24HourFormat by viewModel.is24HourFormat.collectAsState()
     val selectedWorldClocks by viewModel.selectedWorldClocks.collectAsState()
+    val clockStyle by viewModel.clockStyle.collectAsState()
+    
     var showZoneSearch by remember { mutableStateOf(false) }
+    var showStyleSelector by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     Column(
         modifier = Modifier
