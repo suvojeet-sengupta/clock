@@ -1,5 +1,7 @@
 package com.suvojeet.clock.ui.alarm
 
+import android.media.RingtoneManager
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +33,8 @@ import com.suvojeet.clock.ui.theme.*
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -345,8 +349,23 @@ fun AlarmBottomSheet(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
+                    var soundName by remember { mutableStateOf("Default") }
+                    LaunchedEffect(soundUri) {
+                        soundName = if (soundUri.isNotEmpty()) {
+                            withContext(Dispatchers.IO) {
+                                try {
+                                    val uri = Uri.parse(soundUri)
+                                    RingtoneManager.getRingtone(context, uri).getTitle(context)
+                                } catch (e: Exception) {
+                                    "Unknown"
+                                }
+                            }
+                        } else {
+                            "Default"
+                        }
+                    }
                     Text(
-                        text = if (soundUri.isEmpty()) "Default" else "Selected",
+                        text = soundName,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

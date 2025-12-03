@@ -28,6 +28,7 @@ class AndroidAlarmScheduler(
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("EXTRA_MESSAGE", alarm.label.ifEmpty { "Alarm" })
             putExtra("EXTRA_SOUND_URI", alarm.soundUri)
+            putExtra("EXTRA_VIBRATE", alarm.isVibrateEnabled)
         }
         
         val pendingIntent = PendingIntent.getBroadcast(

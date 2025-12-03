@@ -1,6 +1,9 @@
 package com.suvojeet.clock
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.AlarmClock
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,16 +45,68 @@ import com.suvojeet.clock.ui.clock.ClockScreen
 import com.suvojeet.clock.ui.alarm.AlarmScreen
 import com.suvojeet.clock.ui.timer.TimerScreen
 import com.suvojeet.clock.ui.stopwatch.StopwatchScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         checkPermissions()
+        handleSetAlarmIntent(intent)
 
         setContent {
             CosmicTheme {
                 MainScreen()
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleSetAlarmIntent(intent)
+    }
+
+    private fun handleSetAlarmIntent(intent: Intent) {
+        if (intent.action == AlarmClock.ACTION_SET_ALARM) {
+            val hour = intent.getIntExtra(AlarmClock.EXTRA_HOUR, -1)
+            val minutes = intent.getIntExtra(AlarmClock.EXTRA_MINUTES, -1)
+            val message = intent.getStringExtra(AlarmClock.EXTRA_MESSAGE) ?: "Alarm"
+            val skipUi = intent.getBooleanExtra(AlarmClock.EXTRA_SKIP_UI, false)
+
+            if (hour != -1 && minutes != -1) {
+                val application = applicationContext as ClockApplication
+                val repository = com.suvojeet.clock.data.alarm.AlarmRepository(application.database.alarmDao())
+                val scheduler = com.suvojeet.clock.data.alarm.AndroidAlarmScheduler(this)
+                
+                CoroutineScope(Dispatchers.IO).launch {
+                    val time = LocalTime.of(hour, minutes)
+                    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                    val alarm = com.suvojeet.clock.data.alarm.AlarmEntity(
+                        time = time.format(formatter),
+                        label = message,
+                        isEnabled = true
+                    )
+                    val newAlarmId = repository.insert(alarm)
+                    
+                    val scheduledAlarm = alarm.copy(id = newAlarmId.toInt())
+                    scheduler.schedule(scheduledAlarm)
+                    
+                    if (!skipUi) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Toast.makeText(this@MainActivity, "Alarm set for ${time.format(formatter)}", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Toast.makeText(this@MainActivity, "Alarm set for ${time.format(formatter)} (UI skipped)", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } else {
+                Toast.makeText(this, "Could not set alarm: Invalid time", Toast.LENGTH_SHORT).show()
             }
         }
     }

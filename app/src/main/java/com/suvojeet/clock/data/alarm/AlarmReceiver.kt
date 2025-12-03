@@ -18,6 +18,7 @@ class AlarmReceiver : BroadcastReceiver() {
         try {
             val message = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
             val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
+            val isVibrateEnabled = intent.getBooleanExtra("EXTRA_VIBRATE", true)
             val channelId = "alarm_channel_high_priority"
             
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -34,7 +35,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Channel for Alarm Manager"
-                    enableVibration(true)
+                    enableVibration(isVibrateEnabled)
                     setSound(android.provider.Settings.System.DEFAULT_ALARM_ALERT_URI, audioAttributes)
                     lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 }
@@ -44,6 +45,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val fullScreenIntent = Intent(context, com.suvojeet.clock.ui.alarm.AlarmActivity::class.java).apply {
                 putExtra("EXTRA_MESSAGE", message)
                 putExtra("EXTRA_SOUND_URI", soundUri)
+                putExtra("EXTRA_VIBRATE", isVibrateEnabled)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
             }
             val fullScreenPendingIntent = android.app.PendingIntent.getActivity(
