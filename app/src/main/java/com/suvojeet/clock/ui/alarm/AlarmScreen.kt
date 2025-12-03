@@ -34,6 +34,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,16 +51,36 @@ fun AlarmScreen() {
     var selectedAlarm by remember { mutableStateOf<AlarmEntity?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val scope = rememberCoroutineScope()
+    val fabCornerSize = remember { androidx.compose.animation.core.Animatable(24f) }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { 
-                    selectedAlarm = null // New alarm
-                    showBottomSheet = true 
+                    scope.launch {
+                        // Morph to square (faster)
+                        fabCornerSize.animateTo(
+                            targetValue = 4f,
+                            animationSpec = androidx.compose.animation.core.tween(150)
+                        )
+                        // Open sheet immediately after squish
+                        selectedAlarm = null
+                        showBottomSheet = true 
+                        
+                        // Morph back to original concurrently with sheet opening
+                        fabCornerSize.animateTo(
+                            targetValue = 24f,
+                            animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                            )
+                        )
+                    }
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = MaterialTheme.shapes.large
+                shape = RoundedCornerShape(fabCornerSize.value.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Alarm")
             }
