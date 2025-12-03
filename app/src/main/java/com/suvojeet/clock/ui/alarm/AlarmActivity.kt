@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
@@ -33,41 +32,65 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.suvojeet.clock.ClockApplication
 import com.suvojeet.clock.data.alarm.AlarmReceiver
+import com.suvojeet.clock.data.settings.DismissMethod
+import com.suvojeet.clock.data.settings.MathDifficulty
 import com.suvojeet.clock.ui.theme.CosmicTheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import kotlin.math.sqrt
 
 class AlarmActivity : ComponentActivity() {
-    private var ringtone: Ringtone? = null
+    private var mediaPlayer: android.media.MediaPlayer? = null
     private var vibrator: Vibrator? = null
     private val NOTIFICATION_ID = 999
+    private var volumeJob: kotlinx.coroutines.Job? = null
+    private val scope = kotlinx.coroutines.MainScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         turnScreenOnAndKeyguard()
-        startRinging()
+        
+        val application = applicationContext as ClockApplication
+        val settingsRepository = application.settingsRepository
+        
+        scope.launch {
+            val gradualVolume = settingsRepository.gradualVolume.first()
+            val dismissMethod = settingsRepository.dismissMethod.first()
+            val mathDifficulty = settingsRepository.mathDifficulty.first()
+            
+            startRinging(gradualVolume)
 
-        val label = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
-        val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
+            val label = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
+            val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
 
-        setContent {
-            CosmicTheme {
-                AlarmTriggerScreen(
-                    label = label,
-                    onDismiss = {
-                        dismissAlarm()
-                    },
-                    onSnooze = {
-                        snoozeAlarm(label, soundUri)
-                    }
-                )
+            setContent {
+                CosmicTheme {
+                    AlarmTriggerScreen(
+                        label = label,
+                        dismissMethod = dismissMethod,
+                        mathDifficulty = mathDifficulty,
+                        onDismiss = {
+                            dismissAlarm()
+                        },
+                        onSnooze = {
+                            snoozeAlarm(label, soundUri)
+                        }
+                    )
+                }
             }
         }
     }
@@ -89,7 +112,7 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
-    private fun startRinging() {
+    private fun startRinging(gradualVolume: Boolean) {
         val soundUriString = intent.getStringExtra("EXTRA_SOUND_URI")
         val uri = if (!soundUriString.isNullOrEmpty()) {
             android.net.Uri.parse(soundUriString)
@@ -97,8 +120,32 @@ class AlarmActivity : ComponentActivity() {
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         }
         
-        ringtone = RingtoneManager.getRingtone(this, uri)
-        ringtone?.play()
+        try {
+            mediaPlayer = android.media.MediaPlayer().apply {
+                setDataSource(applicationContext, uri)
+                setAudioAttributes(
+                    android.media.AudioAttributes.Builder()
+                        .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                isLooping = true
+                prepare()
+            }
+
+            if (gradualVolume) {
+                mediaPlayer?.setVolume(0.1f, 0.1f)
+                mediaPlayer?.start()
+                startGradualVolumeIncrease()
+            } else {
+                mediaPlayer?.setVolume(1.0f, 1.0f)
+                mediaPlayer?.start()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            val ringtone = RingtoneManager.getRingtone(this, uri)
+            ringtone?.play()
+        }
 
         if (intent.getBooleanExtra("EXTRA_VIBRATE", true)) {
             vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -119,8 +166,25 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
+    private fun startGradualVolumeIncrease() {
+        volumeJob = scope.launch {
+            for (i in 1..10) {
+                kotlinx.coroutines.delay(3000)
+                val volume = 0.1f + (i * 0.09f)
+                mediaPlayer?.setVolume(volume, volume)
+            }
+        }
+    }
+
     private fun stopRinging() {
-        ringtone?.stop()
+        volumeJob?.cancel()
+        try {
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        mediaPlayer = null
         vibrator?.cancel()
     }
 
@@ -146,12 +210,12 @@ class AlarmActivity : ComponentActivity() {
         }
         val pendingIntent = PendingIntent.getBroadcast(
             this,
-            0, // Using 0 for snooze, distinct from main alarms if possible
+            0,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val snoozeTime = System.currentTimeMillis() + 10 * 60 * 1000 // 10 Minutes
+        val snoozeTime = System.currentTimeMillis() + 10 * 60 * 1000
         
         val clockInfo = AlarmManager.AlarmClockInfo(snoozeTime, pendingIntent)
         alarmManager.setAlarmClock(clockInfo, pendingIntent)
@@ -169,10 +233,14 @@ class AlarmActivity : ComponentActivity() {
 @Composable
 fun AlarmTriggerScreen(
     label: String,
+    dismissMethod: DismissMethod,
+    mathDifficulty: MathDifficulty,
     onDismiss: () -> Unit,
     onSnooze: () -> Unit
 ) {
     var currentTime by remember { mutableStateOf(LocalTime.now()) }
+    var showMathDialog by remember { mutableStateOf(false) }
+    var showShakeScreen by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         while(true) {
@@ -267,7 +335,13 @@ fun AlarmTriggerScreen(
                 }
 
                 Button(
-                    onClick = onDismiss,
+                    onClick = {
+                        when (dismissMethod) {
+                            DismissMethod.STANDARD -> onDismiss()
+                            DismissMethod.MATH -> showMathDialog = true
+                            DismissMethod.SHAKE -> showShakeScreen = true
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -284,4 +358,185 @@ fun AlarmTriggerScreen(
             }
         }
     }
+
+    if (showMathDialog) {
+        MathChallengeDialog(
+            difficulty = mathDifficulty,
+            onSuccess = onDismiss,
+            onCancel = { showMathDialog = false }
+        )
+    }
+
+    if (showShakeScreen) {
+        ShakeChallengeScreen(
+            onSuccess = onDismiss,
+            onCancel = { showShakeScreen = false }
+        )
+    }
+}
+
+@Composable
+fun MathChallengeDialog(
+    difficulty: MathDifficulty,
+    onSuccess: () -> Unit,
+    onCancel: () -> Unit
+) {
+    var answer by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf(false) }
+    
+    val problem = remember { generateMathProblem(difficulty) }
+
+    AlertDialog(
+        onDismissRequest = { /* Prevent dismiss */ },
+        title = { Text("Solve to Dismiss") },
+        text = {
+            Column {
+                Text(
+                    text = "${problem.first} ${problem.second} ${problem.third} = ?",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                OutlinedTextField(
+                    value = answer,
+                    onValueChange = { 
+                        answer = it
+                        error = false
+                    },
+                    label = { Text("Answer") },
+                    isError = error,
+                    singleLine = true
+                )
+                if (error) {
+                    Text(
+                        text = "Incorrect answer",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (answer == problem.fourth.toString()) {
+                        onSuccess()
+                    } else {
+                        error = true
+                        answer = ""
+                    }
+                }
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Back")
+            }
+        }
+    )
+}
+
+fun generateMathProblem(difficulty: MathDifficulty): Quad<Int, String, Int, Int> {
+    val random = Random.Default
+    val operator = if (random.nextBoolean()) "+" else "-"
+    val num1: Int
+    val num2: Int
+    
+    when (difficulty) {
+        MathDifficulty.EASY -> {
+            num1 = random.nextInt(1, 20)
+            num2 = random.nextInt(1, 20)
+        }
+        MathDifficulty.MEDIUM -> {
+            num1 = random.nextInt(20, 100)
+            num2 = random.nextInt(20, 100)
+        }
+        MathDifficulty.HARD -> {
+            num1 = random.nextInt(100, 500)
+            num2 = random.nextInt(50, 200)
+        }
+    }
+    
+    val result = if (operator == "+") num1 + num2 else num1 - num2
+    return Quad(num1, operator, num2, result)
+}
+
+data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Composable
+fun ShakeChallengeScreen(
+    onSuccess: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val context = LocalContext.current
+    var shakeCount by remember { mutableStateOf(0) }
+    val targetShakes = 15
+    
+    DisposableEffect(Unit) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        
+        var lastUpdate: Long = 0
+        var lastX = 0f
+        var lastY = 0f
+        var lastZ = 0f
+        val shakeThreshold = 800
+
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val curTime = System.currentTimeMillis()
+                if ((curTime - lastUpdate) > 100) {
+                    val diffTime = (curTime - lastUpdate)
+                    lastUpdate = curTime
+
+                    val x = event.values[0]
+                    val y = event.values[1]
+                    val z = event.values[2]
+
+                    val speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
+
+                    if (speed > shakeThreshold) {
+                        shakeCount++
+                        if (shakeCount >= targetShakes) {
+                            onSuccess()
+                        }
+                    }
+
+                    lastX = x
+                    lastY = y
+                    lastZ = z
+                }
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { /* Prevent dismiss */ },
+        title = { Text("Shake to Dismiss") },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Shake your phone!")
+                Spacer(modifier = Modifier.height(16.dp))
+                LinearProgressIndicator(
+                    progress = { shakeCount / targetShakes.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text("${shakeCount} / $targetShakes")
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Back")
+            }
+        }
+    )
 }

@@ -17,6 +17,9 @@ class SettingsRepository(private val context: Context) {
 
     private val IS_24_HOUR_FORMAT = booleanPreferencesKey("is_24_hour_format")
     private val CLOCK_STYLE = stringPreferencesKey("clock_style")
+    private val GRADUAL_VOLUME = booleanPreferencesKey("gradual_volume")
+    private val DISMISS_METHOD = stringPreferencesKey("dismiss_method")
+    private val MATH_DIFFICULTY = stringPreferencesKey("math_difficulty")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -33,6 +36,31 @@ class SettingsRepository(private val context: Context) {
             }
         }
 
+    val gradualVolume: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[GRADUAL_VOLUME] ?: false
+        }
+
+    val dismissMethod: Flow<DismissMethod> = context.dataStore.data
+        .map { preferences ->
+            val methodName = preferences[DISMISS_METHOD] ?: DismissMethod.STANDARD.name
+            try {
+                DismissMethod.valueOf(methodName)
+            } catch (e: IllegalArgumentException) {
+                DismissMethod.STANDARD
+            }
+        }
+
+    val mathDifficulty: Flow<MathDifficulty> = context.dataStore.data
+        .map { preferences ->
+            val difficultyName = preferences[MATH_DIFFICULTY] ?: MathDifficulty.EASY.name
+            try {
+                MathDifficulty.valueOf(difficultyName)
+            } catch (e: IllegalArgumentException) {
+                MathDifficulty.EASY
+            }
+        }
+
     suspend fun set24HourFormat(is24Hour: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_24_HOUR_FORMAT] = is24Hour
@@ -42,6 +70,24 @@ class SettingsRepository(private val context: Context) {
     suspend fun setClockStyle(style: ClockStyle) {
         context.dataStore.edit { preferences ->
             preferences[CLOCK_STYLE] = style.name
+        }
+    }
+
+    suspend fun setGradualVolume(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[GRADUAL_VOLUME] = enabled
+        }
+    }
+
+    suspend fun setDismissMethod(method: DismissMethod) {
+        context.dataStore.edit { preferences ->
+            preferences[DISMISS_METHOD] = method.name
+        }
+    }
+
+    suspend fun setMathDifficulty(difficulty: MathDifficulty) {
+        context.dataStore.edit { preferences ->
+            preferences[MATH_DIFFICULTY] = difficulty.name
         }
     }
 }
