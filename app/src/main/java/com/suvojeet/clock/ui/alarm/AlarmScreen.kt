@@ -221,6 +221,7 @@ fun AlarmBottomSheet(
     var selectedDays by remember { mutableStateOf(alarm?.daysOfWeek ?: emptyList()) }
     var soundUri by remember { mutableStateOf(alarm?.soundUri ?: "") }
     var showLabelDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val ringtoneLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -251,6 +252,32 @@ fun AlarmBottomSheet(
             },
             dismissButton = {
                 TextButton(onClick = { showLabelDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Alarm") },
+            text = { Text("Are you sure you want to delete this alarm?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (alarm != null) {
+                            onDelete(alarm)
+                        }
+                        showDeleteConfirmation = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
                     Text("Cancel")
                 }
             }
@@ -405,7 +432,7 @@ fun AlarmBottomSheet(
             ) {
                 if (alarm != null) {
                     TextButton(
-                        onClick = { onDelete(alarm) },
+                        onClick = { showDeleteConfirmation = true },
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
                         Text("Delete")
