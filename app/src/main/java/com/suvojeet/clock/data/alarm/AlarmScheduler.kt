@@ -9,7 +9,9 @@ import android.util.Log
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 interface AlarmScheduler {
     fun schedule(alarm: AlarmEntity)
@@ -35,7 +37,16 @@ class AndroidAlarmScheduler(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val time = LocalTime.parse(alarm.time) // Assumes "HH:mm" format
+        val time = try {
+            LocalTime.parse(alarm.time)
+        } catch (e: Exception) {
+            try {
+                LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+            } catch (e2: Exception) {
+                LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.US))
+            }
+        }
+        
         val now = ZonedDateTime.now(ZoneId.systemDefault())
         var alarmTime = now.with(time)
 

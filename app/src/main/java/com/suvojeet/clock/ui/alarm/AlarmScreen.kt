@@ -141,8 +141,13 @@ fun AlarmItem(
         ) {
             Column {
                 Row(verticalAlignment = Alignment.Bottom) {
+                    val displayTime = try {
+                        LocalTime.parse(alarm.time).format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+                    } catch (e: Exception) {
+                        alarm.time // Fallback or already formatted
+                    }
                     Text(
-                        text = alarm.time,
+                        text = displayTime.uppercase(),
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (alarm.isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
@@ -192,8 +197,11 @@ fun AlarmBottomSheet(
     sheetState: SheetState
 ) {
     val initialTime = if (alarm != null) {
-        // Parse the stored time using the 12-hour format
-        LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+        try {
+            LocalTime.parse(alarm.time)
+        } catch (e: Exception) {
+            LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+        }
     } else {
         LocalTime.now()
     }
@@ -392,7 +400,7 @@ fun AlarmBottomSheet(
                 Button(
                     onClick = {
                         val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                        val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+                        val formatter = DateTimeFormatter.ofPattern("HH:mm")
                         onSave(
                             AlarmEntity(
                                 id = alarm?.id ?: 0,
