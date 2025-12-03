@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -155,13 +156,14 @@ fun MainScreen() {
             
             // Show TopAppBar only on main screens, not on Settings (Settings has its own)
             val isMainScreen = currentDestination?.hierarchy?.any { 
-                it.hasRoute<Screen.Clock>() || it.hasRoute<Screen.Alarm>() || 
+                it.hasRoute<Screen.Clock>() || it.hasRoute<Screen.WorldClock>() || it.hasRoute<Screen.Alarm>() || 
                 it.hasRoute<Screen.Timer>() || it.hasRoute<Screen.Stopwatch>()
             } == true
 
             if (isMainScreen) {
                 val title = when {
                     currentDestination?.hasRoute<Screen.Clock>() == true -> "Clock"
+                    currentDestination?.hasRoute<Screen.WorldClock>() == true -> "World Clock"
                     currentDestination?.hasRoute<Screen.Alarm>() == true -> "Alarm"
                     currentDestination?.hasRoute<Screen.Timer>() == true -> "Timer"
                     currentDestination?.hasRoute<Screen.Stopwatch>() == true -> "Stopwatch"
@@ -208,6 +210,7 @@ fun MainScreen() {
                 ) {
                     val items = listOf(
                         Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
+                        Triple(Screen.WorldClock, Icons.Filled.Public, "World"),
                         Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
                         Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
                         Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
@@ -252,6 +255,7 @@ fun MainScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<Screen.Clock> { ClockScreen() }
+            composable<Screen.WorldClock> { com.suvojeet.clock.ui.clock.WorldClockScreen() }
             composable<Screen.Alarm> { AlarmScreen() }
             composable<Screen.Timer> { TimerScreen() }
             composable<Screen.Stopwatch> { StopwatchScreen() }
