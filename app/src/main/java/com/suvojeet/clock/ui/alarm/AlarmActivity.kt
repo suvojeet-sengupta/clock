@@ -55,6 +55,7 @@ class AlarmActivity : ComponentActivity() {
         startRinging()
 
         val label = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
+        val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
 
         setContent {
             CosmicTheme {
@@ -64,7 +65,7 @@ class AlarmActivity : ComponentActivity() {
                         dismissAlarm()
                     },
                     onSnooze = {
-                        snoozeAlarm(label)
+                        snoozeAlarm(label, soundUri)
                     }
                 )
             }
@@ -89,7 +90,13 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun startRinging() {
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        val soundUriString = intent.getStringExtra("EXTRA_SOUND_URI")
+        val uri = if (!soundUriString.isNullOrEmpty()) {
+            android.net.Uri.parse(soundUriString)
+        } else {
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        }
+        
         ringtone = RingtoneManager.getRingtone(this, uri)
         ringtone?.play()
 
@@ -126,13 +133,14 @@ class AlarmActivity : ComponentActivity() {
         finish()
     }
 
-    private fun snoozeAlarm(label: String) {
+    private fun snoozeAlarm(label: String, soundUri: String?) {
         stopRinging()
         cancelNotification()
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlarmReceiver::class.java).apply {
             putExtra("EXTRA_MESSAGE", label)
+            putExtra("EXTRA_SOUND_URI", soundUri)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             this,

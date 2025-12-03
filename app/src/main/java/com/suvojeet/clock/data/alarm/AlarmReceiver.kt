@@ -17,6 +17,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         try {
             val message = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
+            val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
             val channelId = "alarm_channel_high_priority"
             
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -42,6 +43,7 @@ class AlarmReceiver : BroadcastReceiver() {
             
             val fullScreenIntent = Intent(context, com.suvojeet.clock.ui.alarm.AlarmActivity::class.java).apply {
                 putExtra("EXTRA_MESSAGE", message)
+                putExtra("EXTRA_SOUND_URI", soundUri)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
             }
             val fullScreenPendingIntent = android.app.PendingIntent.getActivity(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -205,6 +206,43 @@ fun AlarmBottomSheet(
     var label by remember { mutableStateOf(alarm?.label ?: "") }
     var isVibrateEnabled by remember { mutableStateOf(alarm?.isVibrateEnabled ?: true) }
     var selectedDays by remember { mutableStateOf(alarm?.daysOfWeek ?: emptyList()) }
+    var soundUri by remember { mutableStateOf(alarm?.soundUri ?: "") }
+    var showLabelDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val ringtoneLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val uri: android.net.Uri? = result.data?.getParcelableExtra(android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            soundUri = uri?.toString() ?: ""
+        }
+    }
+
+    if (showLabelDialog) {
+        AlertDialog(
+            onDismissRequest = { showLabelDialog = false },
+            title = { Text("Alarm Label") },
+            text = {
+                OutlinedTextField(
+                    value = label,
+                    onValueChange = { label = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showLabelDialog = false }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLabelDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -242,7 +280,10 @@ fun AlarmBottomSheet(
             ) {
                 // Label
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLabelDialog = true }
+                        .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -261,8 +302,44 @@ fun AlarmBottomSheet(
                     Text(
                         text = label.ifEmpty { "Alarm" },
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.clickable { /* TODO: Open Label Dialog */ }
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Sound
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val intent = android.content.Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                                putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_ALARM)
+                                putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Alarm Sound")
+                                putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, if (soundUri.isNotEmpty()) android.net.Uri.parse(soundUri) else null)
+                                putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true)
+                                putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                            }
+                            ringtoneLauncher.launch(intent)
+                        }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.filled.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "Sound",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    Text(
+                        text = if (soundUri.isEmpty()) "Default" else "Selected",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -322,6 +399,7 @@ fun AlarmBottomSheet(
                                 label = label,
                                 isVibrateEnabled = isVibrateEnabled,
                                 daysOfWeek = selectedDays,
+                                soundUri = soundUri,
                                 isEnabled = true
                             )
                         )

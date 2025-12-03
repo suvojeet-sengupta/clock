@@ -11,5 +11,6 @@ data class AlarmEntity(
     val label: String = "",
     val isEnabled: Boolean = true,
     val isVibrateEnabled: Boolean = true,
-    val daysOfWeek: List<Int> = emptyList() // 1=Monday, 7=Sunday
+    val daysOfWeek: List<Int> = emptyList(), // 1=Monday, 7=Sunday
+    val soundUri: String = "" // URI string for the selected ringtone
 )

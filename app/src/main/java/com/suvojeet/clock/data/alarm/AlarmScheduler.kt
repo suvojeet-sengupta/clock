@@ -25,6 +25,7 @@ class AndroidAlarmScheduler(
     override fun schedule(alarm: AlarmEntity) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("EXTRA_MESSAGE", alarm.label.ifEmpty { "Alarm" })
+            putExtra("EXTRA_SOUND_URI", alarm.soundUri)
         }
         
         val pendingIntent = PendingIntent.getBroadcast(
