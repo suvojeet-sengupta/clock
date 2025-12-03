@@ -34,6 +34,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.hilt.navigation.compose.hiltViewModel
+import java.time.format.DateTimeFormatter
+
+@Composable
+fun WorldClockScreen() {
+    val viewModel: ClockViewModel = hiltViewModel()
+
+    val selectedWorldClocks by viewModel.selectedWorldClocks.collectAsState()
+    val is24HourFormat by viewModel.is24HourFormat.collectAsState()
+    var showZoneSearch by remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)

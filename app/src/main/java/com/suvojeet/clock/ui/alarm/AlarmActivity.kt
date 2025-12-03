@@ -50,12 +50,32 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import kotlin.math.sqrt
-
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
 
 @AndroidEntryPoint
 class AlarmActivity : ComponentActivity() {
+    @Inject
+    lateinit var settingsRepository: com.suvojeet.clock.data.settings.SettingsRepository
+
+    private var mediaPlayer: android.media.MediaPlayer? = null
+    private var vibrator: Vibrator? = null
+    private var volumeJob: kotlinx.coroutines.Job? = null
+    
+    companion object {
+        private const val NOTIFICATION_ID = 1
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        turnScreenOnAndKeyguard()
+        
+        lifecycleScope.launch {
+            val gradualVolume = settingsRepository.gradualVolume.first()
+            val dismissMethod = settingsRepository.dismissMethod.first()
+            val mathDifficulty = settingsRepository.mathDifficulty.first()
             
             startRinging(gradualVolume)
 
@@ -152,7 +172,7 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun startGradualVolumeIncrease() {
-        volumeJob = scope.launch {
+        volumeJob = lifecycleScope.launch {
             for (i in 1..10) {
                 kotlinx.coroutines.delay(3000)
                 val volume = 0.1f + (i * 0.09f)

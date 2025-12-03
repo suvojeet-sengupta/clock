@@ -43,6 +43,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.cos
+import kotlin.math.sin
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun ClockScreen() {
+    val viewModel: ClockViewModel = hiltViewModel()
+    
+    val currentTime by viewModel.currentTime.collectAsState()
+    val is24HourFormat by viewModel.is24HourFormat.collectAsState()
+    val clockStyle by viewModel.clockStyle.collectAsState()
+    
     var showStyleSelector by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 

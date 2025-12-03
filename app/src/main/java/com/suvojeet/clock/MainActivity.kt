@@ -52,6 +52,58 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var repository: com.suvojeet.clock.data.alarm.AlarmRepository
+
+    @Inject
+    lateinit var scheduler: com.suvojeet.clock.data.alarm.AlarmScheduler
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        checkPermissions()
+        handleSetAlarmIntent(intent)
+
+        setContent {
+            CosmicTheme {
+                MainScreen()
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleSetAlarmIntent(intent)
+    }
+
+    private fun handleSetAlarmIntent(intent: Intent) {
+        if (intent.action == AlarmClock.ACTION_SET_ALARM) {
+            val hour = intent.getIntExtra(AlarmClock.EXTRA_HOUR, -1)
+            val minutes = intent.getIntExtra(AlarmClock.EXTRA_MINUTES, -1)
+            val message = intent.getStringExtra(AlarmClock.EXTRA_MESSAGE) ?: "Alarm"
+            val skipUi = intent.getBooleanExtra(AlarmClock.EXTRA_SKIP_UI, false)
+
+            if (hour != -1 && minutes != -1) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val time = LocalTime.of(hour, minutes)
+                    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                    val alarm = com.suvojeet.clock.data.alarm.AlarmEntity(
+                        time = time.format(formatter),
+                        label = message,
+                        isEnabled = true
+                    )
+                    val newAlarmId = repository.insert(alarm)
+                    
+                    val scheduledAlarm = alarm.copy(id = newAlarmId.toInt())
+                    scheduler.schedule(scheduledAlarm)
+                    
+                    if (!skipUi) {
                         CoroutineScope(Dispatchers.Main).launch {
                             Toast.makeText(this@MainActivity, "Alarm set for ${time.format(formatter)}", Toast.LENGTH_LONG).show()
                         }
@@ -188,6 +240,12 @@ fun MainScreen() {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
