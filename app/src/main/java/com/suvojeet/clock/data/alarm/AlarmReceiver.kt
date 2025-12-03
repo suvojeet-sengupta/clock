@@ -57,11 +57,12 @@ class AlarmReceiver : BroadcastReceiver() {
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setAutoCancel(true)
+                .setAutoCancel(false) // Don't auto cancel, wait for user action
+                .setOngoing(true)     // Persistent until dismissed
                 .setFullScreenIntent(fullScreenPendingIntent, true)
                 .build()
                 
-            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+            notificationManager.notify(999, notification)
             
             // Force start activity if we have the overlay permission, regardless of version
             // This is critical for Android 10+ (Q) and especially Android 14/15
