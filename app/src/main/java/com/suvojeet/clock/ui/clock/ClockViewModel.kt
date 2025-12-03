@@ -22,6 +22,15 @@ class ClockViewModel(private val settingsRepository: SettingsRepository) : ViewM
     val is24HourFormat: StateFlow<Boolean> = settingsRepository.is24HourFormat
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val clockStyle: StateFlow<ClockStyle> = settingsRepository.clockStyle
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ClockStyle.CLASSIC)
+
+    fun updateClockStyle(style: ClockStyle) {
+        viewModelScope.launch {
+            settingsRepository.setClockStyle(style)
+        }
+    }
+
     init {
         viewModelScope.launch {
             while (true) {
