@@ -164,7 +164,7 @@ fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
     val formatter = DateTimeFormatter.ofPattern(pattern)
     Text(
         text = time.format(formatter).uppercase(),
-        style = MaterialTheme.typography.displayLarge.copy(fontSize = 60.sp),
+        style = MaterialTheme.typography.displayLarge.copy(fontSize = 48.sp),
         color = MaterialTheme.colorScheme.onBackground
     )
 }

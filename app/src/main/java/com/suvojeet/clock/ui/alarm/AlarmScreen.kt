@@ -192,7 +192,8 @@ fun AlarmBottomSheet(
     sheetState: SheetState
 ) {
     val initialTime = if (alarm != null) {
-        LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("HH:mm"))
+        // Parse the stored time using the 12-hour format
+        LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
     } else {
         LocalTime.now()
     }
@@ -391,7 +392,7 @@ fun AlarmBottomSheet(
                 Button(
                     onClick = {
                         val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                        val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
                         onSave(
                             AlarmEntity(
                                 id = alarm?.id ?: 0,
