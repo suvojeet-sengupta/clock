@@ -69,7 +69,7 @@ fun AnalogClock(time: LocalTime) {
 
     Box(
         modifier = Modifier
-            .size(300.dp)
+            .size(250.dp)
             .clip(CircleShape)
             .background(
                 brush = Brush.radialGradient(
@@ -163,7 +163,7 @@ fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
     val formatter = DateTimeFormatter.ofPattern(pattern)
     Text(
         text = time.format(formatter).uppercase(),
-        style = MaterialTheme.typography.displayLarge,
+        style = MaterialTheme.typography.displayLarge.copy(fontSize = 60.sp),
         color = MaterialTheme.colorScheme.onBackground
     )
 }
