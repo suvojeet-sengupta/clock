@@ -205,7 +205,7 @@ fun AlarmTriggerScreen(
         // Background pulsing circle
         Box(
             modifier = Modifier
-                .size(300.dp)
+                .size(250.dp)
                 .scale(pulseScale)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
@@ -237,7 +237,7 @@ fun AlarmTriggerScreen(
             Text(
                 text = currentTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                 style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 80.sp,
+                    fontSize = 60.sp,
                     fontWeight = FontWeight.Thin
                 ),
                 color = MaterialTheme.colorScheme.onBackground
