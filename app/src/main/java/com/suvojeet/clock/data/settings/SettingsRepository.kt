@@ -90,4 +90,24 @@ class SettingsRepository(private val context: Context) {
             preferences[MATH_DIFFICULTY] = difficulty.name
         }
     }
+    private val SELECTED_WORLD_CLOCK_ZONES = androidx.datastore.preferences.core.stringSetPreferencesKey("selected_world_clock_zones")
+
+    val selectedWorldClockZones: Flow<Set<String>> = context.dataStore.data
+        .map { preferences ->
+            preferences[SELECTED_WORLD_CLOCK_ZONES] ?: emptySet()
+        }
+
+    suspend fun addWorldClockZone(zoneId: String) {
+        context.dataStore.edit { preferences ->
+            val currentZones = preferences[SELECTED_WORLD_CLOCK_ZONES] ?: emptySet()
+            preferences[SELECTED_WORLD_CLOCK_ZONES] = currentZones + zoneId
+        }
+    }
+
+    suspend fun removeWorldClockZone(zoneId: String) {
+        context.dataStore.edit { preferences ->
+            val currentZones = preferences[SELECTED_WORLD_CLOCK_ZONES] ?: emptySet()
+            preferences[SELECTED_WORLD_CLOCK_ZONES] = currentZones - zoneId
+        }
+    }
 }

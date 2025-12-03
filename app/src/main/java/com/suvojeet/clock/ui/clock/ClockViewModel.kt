@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.flow.map
 
 class ClockViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
 
@@ -31,6 +32,35 @@ class ClockViewModel(private val settingsRepository: SettingsRepository) : ViewM
         }
     }
 
+    val selectedWorldClocks: StateFlow<List<WorldClockData>> = settingsRepository.selectedWorldClockZones
+        .map { zoneIds ->
+            zoneIds.map { zoneId ->
+                val zone = java.time.ZoneId.of(zoneId)
+                val now = java.time.ZonedDateTime.now(zone)
+                WorldClockData(
+                    zoneId = zoneId,
+                    city = zoneId.split("/").last().replace("_", " "),
+                    time = now.toLocalTime(),
+                    offset = zone.rules.getOffset(java.time.Instant.now()).id.replace("Z", "+00:00")
+                )
+            }.sortedBy { it.city }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val availableZones: List<String> = java.time.ZoneId.getAvailableZoneIds().sorted()
+
+    fun addWorldClock(zoneId: String) {
+        viewModelScope.launch {
+            settingsRepository.addWorldClockZone(zoneId)
+        }
+    }
+
+    fun removeWorldClock(zoneId: String) {
+        viewModelScope.launch {
+            settingsRepository.removeWorldClockZone(zoneId)
+        }
+    }
+
     init {
         viewModelScope.launch {
             while (true) {
@@ -40,6 +70,13 @@ class ClockViewModel(private val settingsRepository: SettingsRepository) : ViewM
         }
     }
 }
+
+data class WorldClockData(
+    val zoneId: String,
+    val city: String,
+    val time: LocalTime,
+    val offset: String
+)
 
 class ClockViewModelFactory(private val settingsRepository: SettingsRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
