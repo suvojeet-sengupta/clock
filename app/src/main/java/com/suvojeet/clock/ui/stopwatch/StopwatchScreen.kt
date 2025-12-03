@@ -27,8 +27,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suvojeet.clock.ui.theme.ElectricBlue
 import java.util.Locale
 
+import androidx.hilt.navigation.compose.hiltViewModel
+
 @Composable
-fun StopwatchScreen(viewModel: StopwatchViewModel = viewModel()) {
+fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
     val elapsedTime by viewModel.elapsedTime.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
     val laps by viewModel.laps.collectAsState()

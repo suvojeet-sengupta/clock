@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class AlarmViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class AlarmViewModel @Inject constructor(
     private val repository: AlarmRepository,
     private val scheduler: AlarmScheduler
 ) : ViewModel() {
@@ -61,15 +65,4 @@ class AlarmViewModel(
     }
 }
 
-class AlarmViewModelFactory(
-    private val repository: AlarmRepository,
-    private val context: android.content.Context
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AlarmViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return AlarmViewModel(repository, AndroidAlarmScheduler(context)) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+

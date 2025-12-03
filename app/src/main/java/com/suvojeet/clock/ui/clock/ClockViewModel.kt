@@ -15,7 +15,11 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.map
 
-class ClockViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class ClockViewModel @Inject constructor(private val settingsRepository: SettingsRepository) : ViewModel() {
 
     private val _currentTime = MutableStateFlow(LocalTime.now())
     val currentTime: StateFlow<LocalTime> = _currentTime.asStateFlow()
@@ -78,12 +82,4 @@ data class WorldClockData(
     val offset: String
 )
 
-class ClockViewModelFactory(private val settingsRepository: SettingsRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ClockViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ClockViewModel(settingsRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+

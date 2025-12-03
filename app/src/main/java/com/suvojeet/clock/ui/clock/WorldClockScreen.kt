@@ -34,25 +34,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.suvojeet.clock.ClockApplication
-import java.time.format.DateTimeFormatter
-
-@Composable
-fun WorldClockScreen() {
-    val context = LocalContext.current
-    val application = context.applicationContext as ClockApplication
-    val viewModel: ClockViewModel = viewModel(factory = ClockViewModelFactory(application.settingsRepository))
-
-    val selectedWorldClocks by viewModel.selectedWorldClocks.collectAsState()
-    val is24HourFormat by viewModel.is24HourFormat.collectAsState()
-    var showZoneSearch by remember { mutableStateOf(false) }
-
-    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)

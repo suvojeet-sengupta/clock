@@ -37,13 +37,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import androidx.hilt.navigation.compose.hiltViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmScreen() {
-    val context = LocalContext.current
-    val application = context.applicationContext as ClockApplication
-    val repository = AlarmRepository(application.database.alarmDao())
-    val viewModel: AlarmViewModel = viewModel(factory = AlarmViewModelFactory(repository, application.applicationContext))
+    val viewModel: AlarmViewModel = hiltViewModel()
     
     val alarms by viewModel.allAlarms.collectAsState()
     

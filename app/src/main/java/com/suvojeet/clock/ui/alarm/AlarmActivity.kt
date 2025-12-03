@@ -52,25 +52,10 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import kotlin.math.sqrt
 
-class AlarmActivity : ComponentActivity() {
-    private var mediaPlayer: android.media.MediaPlayer? = null
-    private var vibrator: Vibrator? = null
-    private val NOTIFICATION_ID = 999
-    private var volumeJob: kotlinx.coroutines.Job? = null
-    private val scope = kotlinx.coroutines.MainScope()
+import dagger.hilt.android.AndroidEntryPoint
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        turnScreenOnAndKeyguard()
-        
-        val application = applicationContext as ClockApplication
-        val settingsRepository = application.settingsRepository
-        
-        scope.launch {
-            val gradualVolume = settingsRepository.gradualVolume.first()
-            val dismissMethod = settingsRepository.dismissMethod.first()
-            val mathDifficulty = settingsRepository.mathDifficulty.first()
+@AndroidEntryPoint
+class AlarmActivity : ComponentActivity() {
             
             startRinging(gradualVolume)
 

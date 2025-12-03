@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TimerViewModel : ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class TimerViewModel @Inject constructor() : ViewModel() {
 
     private val _timeLeft = MutableStateFlow(0L) // in milliseconds
     val timeLeft: StateFlow<Long> = _timeLeft.asStateFlow()

@@ -11,7 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class SettingsViewModel @Inject constructor(private val repository: SettingsRepository) : ViewModel() {
 
     val is24HourFormat: StateFlow<Boolean> = repository.is24HourFormat
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -50,12 +54,4 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     }
 }
 
-class SettingsViewModelFactory(private val repository: SettingsRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+

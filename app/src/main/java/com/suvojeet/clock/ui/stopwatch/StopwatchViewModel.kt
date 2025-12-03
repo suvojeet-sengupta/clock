@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class StopwatchViewModel : ViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class StopwatchViewModel @Inject constructor() : ViewModel() {
 
     private val _elapsedTime = MutableStateFlow(0L) // in milliseconds
     val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()

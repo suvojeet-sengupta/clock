@@ -15,25 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.suvojeet.clock.data.settings.DismissMethod
-import com.suvojeet.clock.data.settings.MathDifficulty
-import com.suvojeet.clock.ClockApplication
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsScreen(
-    onBackClick: () -> Unit
-) {
-    val context = LocalContext.current
-    val application = context.applicationContext as ClockApplication
-    val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(application.settingsRepository))
-    
-    val is24HourFormat by viewModel.is24HourFormat.collectAsState()
-
-    Scaffold(
-        topBar = {
             TopAppBar(
                 title = { Text("Settings") },
                 navigationIcon = {

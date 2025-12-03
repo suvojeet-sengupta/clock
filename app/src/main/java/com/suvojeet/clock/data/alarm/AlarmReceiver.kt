@@ -9,6 +9,10 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.suvojeet.clock.R
 
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
