@@ -214,7 +214,7 @@ fun MainScreen() {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.height(72.dp)
+                    modifier = Modifier.height(90.dp)
                 ) {
                     val items = listOf(
                         Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
