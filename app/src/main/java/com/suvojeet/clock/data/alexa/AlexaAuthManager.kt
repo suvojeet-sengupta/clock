@@ -2,7 +2,7 @@ package com.suvojeet.clock.data.alexa
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.amazon.identity.auth.device.api.authorization.AuthError
+import com.amazon.identity.auth.device.AuthError
 import com.amazon.identity.auth.device.api.authorization.AuthorizationManager
 import com.amazon.identity.auth.device.api.authorization.AuthorizeRequest
 import com.amazon.identity.auth.device.api.authorization.ProfileScope

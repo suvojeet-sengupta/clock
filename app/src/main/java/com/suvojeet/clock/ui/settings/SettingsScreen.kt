@@ -267,7 +267,7 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Placeholder for Alexa Icon if not available, or use a generic icon
                     Icon(
-                        imageVector = Icons.Default.Public, // Using Public as placeholder for Alexa
+                        imageVector = androidx.compose.material.icons.Icons.Default.Language, // Using Language as placeholder for Alexa
                         contentDescription = "Alexa",
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
