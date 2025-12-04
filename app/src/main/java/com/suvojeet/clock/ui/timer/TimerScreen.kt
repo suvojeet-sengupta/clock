@@ -32,7 +32,6 @@ import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-@Composable
 fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val timeLeft by viewModel.timeLeft.collectAsState()
     val totalTime by viewModel.totalTime.collectAsState()
