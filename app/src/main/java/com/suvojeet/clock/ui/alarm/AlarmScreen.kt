@@ -172,7 +172,7 @@ fun AlarmItem(
                     }
                     Text(
                         text = displayTime.uppercase(),
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displayMedium.copy(fontSize = 42.sp),
                         fontWeight = FontWeight.Bold,
                         color = if (alarm.isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
