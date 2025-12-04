@@ -267,7 +267,7 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Placeholder for Alexa Icon if not available, or use a generic icon
                     Icon(
-                        imageVector = Icons.Default.Mic, // Using Mic as placeholder for Alexa
+                        imageVector = Icons.Default.Info, // Using Info as placeholder for Alexa
                         contentDescription = "Alexa",
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
