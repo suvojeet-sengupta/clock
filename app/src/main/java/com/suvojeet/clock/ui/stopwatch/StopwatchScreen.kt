@@ -59,28 +59,19 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Stopwatch Display with Pulsing Background
+            // Stopwatch Display
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.size(300.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(280.dp)
-                        .scale(pulseScale)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFE0E0E0), CircleShape)
-                )
-                
                 Text(
                     text = formatTime(elapsedTime),
                     style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 60.sp,
+                        fontSize = 80.sp, // Larger font since circle is gone
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                         fontWeight = FontWeight.Light
                     ),
-                    color = Color.Black
+                    color = Color.White
                 )
             }
 

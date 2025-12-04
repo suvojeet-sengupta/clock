@@ -58,4 +58,10 @@ class TimerViewModel @Inject constructor() : ViewModel() {
         pauseTimer()
         _timeLeft.value = _totalTime.value
     }
+
+    fun stopTimer() {
+        pauseTimer()
+        _totalTime.value = 0
+        _timeLeft.value = 0
+    }
 }

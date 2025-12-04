@@ -32,26 +32,21 @@ import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
+@Composable
 fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val timeLeft by viewModel.timeLeft.collectAsState()
     val totalTime by viewModel.totalTime.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
 
-    // Input states for the picker
+    // Input states for the picker - these persist across timer runs
     var hoursInput by remember { mutableStateOf("00") }
     var minutesInput by remember { mutableStateOf("00") }
     var secondsInput by remember { mutableStateOf("00") }
 
-    // Pulsing animation for running state
-    val infiniteTransition = rememberInfiniteTransition(label = "Pulsing")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (isRunning) 1.05f else 1.0f, // Only pulse when running
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ), label = "Scale"
-    )
+    // Derived display values
+    val displayHours = if (totalTime > 0) ((timeLeft / 1000) / 3600).toString().padStart(2, '0') else hoursInput
+    val displayMinutes = if (totalTime > 0) (((timeLeft / 1000) % 3600) / 60).toString().padStart(2, '0') else minutesInput
+    val displaySeconds = if (totalTime > 0) ((timeLeft / 1000) % 60).toString().padStart(2, '0') else secondsInput
 
     Scaffold(
         containerColor = Color.Black // Dark background
@@ -62,32 +57,46 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            if (totalTime == 0L) {
-                // IDLE STATE: Time Picker
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (totalTime > 0) "Timer Running" else "Set Timer",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(48.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "Set Timer",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
+                    TimeInput(
+                        value = displayHours,
+                        onValueChange = { if (it.length <= 2) hoursInput = it },
+                        label = "h",
+                        readOnly = totalTime > 0
                     )
-                    Spacer(modifier = Modifier.height(48.dp))
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        TimeInput(value = hoursInput, onValueChange = { if (it.length <= 2) hoursInput = it }, label = "h")
-                        Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
-                        TimeInput(value = minutesInput, onValueChange = { if (it.length <= 2) minutesInput = it }, label = "m")
-                        Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
-                        TimeInput(value = secondsInput, onValueChange = { if (it.length <= 2) secondsInput = it }, label = "s")
-                    }
+                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                    TimeInput(
+                        value = displayMinutes,
+                        onValueChange = { if (it.length <= 2) minutesInput = it },
+                        label = "m",
+                        readOnly = totalTime > 0
+                    )
+                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                    TimeInput(
+                        value = displaySeconds,
+                        onValueChange = { if (it.length <= 2) secondsInput = it },
+                        label = "s",
+                        readOnly = totalTime > 0
+                    )
+                }
 
-                    Spacer(modifier = Modifier.height(64.dp))
+                Spacer(modifier = Modifier.height(64.dp))
 
+                if (totalTime == 0L) {
                     Button(
                         onClick = {
                             val h = hoursInput.toIntOrNull() ?: 0
@@ -111,41 +120,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Start", style = MaterialTheme.typography.titleMedium)
                     }
-                }
-            } else {
-                // RUNNING/PAUSED STATE
-                // Background pulsing circle
-                Box(
-                    modifier = Modifier
-                        .size(280.dp)
-                        .scale(pulseScale)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFE0E0E0), CircleShape)
-                )
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    // Time Display
-                    val hours = (timeLeft / 1000) / 3600
-                    val minutes = ((timeLeft / 1000) % 3600) / 60
-                    val seconds = (timeLeft / 1000) % 60
-
-                    Text(
-                        text = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 60.sp,
-                            fontWeight = FontWeight.Light,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                        ),
-                        color = Color.Black
-                    )
-
-                    Spacer(modifier = Modifier.height(64.dp))
-
-                    // Controls
+                } else {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.padding(horizontal = 32.dp)
@@ -167,7 +142,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                         }
 
                         Button(
-                            onClick = { viewModel.resetTimer() },
+                            onClick = { viewModel.stopTimer() },
                             modifier = Modifier
                                 .height(56.dp)
                                 .weight(1f),
@@ -193,7 +168,8 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
 fun TimeInput(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String
+    label: String,
+    readOnly: Boolean
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         OutlinedTextField(
@@ -204,6 +180,7 @@ fun TimeInput(
                     onValueChange(it) 
                 }
             },
+            readOnly = readOnly,
             modifier = Modifier
                 .width(80.dp)
                 .background(Color(0xFF1C1C1E), RoundedCornerShape(8.dp)), // Dark gray
@@ -217,7 +194,7 @@ fun TimeInput(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color(0xFF2C3E50),
+                focusedBorderColor = if (readOnly) Color.Transparent else Color(0xFF2C3E50),
                 unfocusedContainerColor = Color(0xFF1C1C1E),
                 focusedContainerColor = Color(0xFF1C1C1E)
             ),
