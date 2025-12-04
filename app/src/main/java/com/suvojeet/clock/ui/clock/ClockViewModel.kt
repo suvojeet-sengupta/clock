@@ -65,6 +65,31 @@ class ClockViewModel @Inject constructor(private val settingsRepository: Setting
         }
     }
 
+    private val _searchResults = MutableStateFlow<List<WorldClockData>>(emptyList())
+    val searchResults: StateFlow<List<WorldClockData>> = _searchResults.asStateFlow()
+
+    fun searchZones(query: String) {
+        viewModelScope.launch {
+            val filtered = if (query.isEmpty()) {
+                // Suggest some popular cities if query is empty
+                listOf("America/New_York", "Europe/London", "Asia/Tokyo", "Australia/Sydney", "Europe/Paris")
+            } else {
+                availableZones.filter { it.contains(query, ignoreCase = true) }
+            }
+
+            _searchResults.value = filtered.map { zoneId ->
+                val zone = java.time.ZoneId.of(zoneId)
+                val now = java.time.ZonedDateTime.now(zone)
+                WorldClockData(
+                    zoneId = zoneId,
+                    city = zoneId.split("/").last().replace("_", " "),
+                    time = now.toLocalTime(),
+                    offset = zone.rules.getOffset(java.time.Instant.now()).id.replace("Z", "+00:00")
+                )
+            }
+        }
+    }
+
     init {
         viewModelScope.launch {
             while (true) {

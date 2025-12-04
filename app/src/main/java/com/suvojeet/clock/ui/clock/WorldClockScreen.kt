@@ -45,14 +45,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.time.format.DateTimeFormatter
 
+import androidx.navigation.NavController
+import com.suvojeet.clock.ui.navigation.Screen
+
 @Composable
-fun WorldClockScreen() {
+fun WorldClockScreen(navController: NavController) {
     val viewModel: ClockViewModel = hiltViewModel()
 
     val selectedWorldClocks by viewModel.selectedWorldClocks.collectAsState()
     val is24HourFormat by viewModel.is24HourFormat.collectAsState()
     val currentTime by viewModel.currentTime.collectAsState()
-    var showZoneSearch by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Black // Dark background
@@ -126,7 +128,7 @@ fun WorldClockScreen() {
                 AddLocationCard(
                     text = "Add City",
                     icon = Icons.Default.Add,
-                    onClick = { showZoneSearch = true },
+                    onClick = { navController.navigate(Screen.AddLocation) },
                     modifier = Modifier.weight(1f)
                 )
                 AddLocationCard(
@@ -141,17 +143,6 @@ fun WorldClockScreen() {
                 )
             }
         }
-    }
-
-    if (showZoneSearch) {
-        ZoneSearchSheet(
-            availableZones = viewModel.availableZones,
-            onZoneSelected = {
-                viewModel.addWorldClock(it)
-                showZoneSearch = false
-            },
-            onDismiss = { showZoneSearch = false }
-        )
     }
 }
 
@@ -247,53 +238,4 @@ fun WorldClockItem(
         },
         enableDismissFromStartToEnd = false
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ZoneSearchSheet(
-    availableZones: List<String>,
-    onZoneSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    val filteredZones = remember(searchQuery) {
-        if (searchQuery.isEmpty()) availableZones
-        else availableZones.filter { it.contains(searchQuery, ignoreCase = true) }
-    }
-
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search City") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(Icons.Default.Search, null)
-                }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().height(400.dp)
-            ) {
-                items(filteredZones.size) { index ->
-                    val zone = filteredZones[index]
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onZoneSelected(zone) }
-                            .padding(vertical = 12.dp)
-                    ) {
-                        Text(
-                            text = zone.split("/").last().replace("_", " "),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    HorizontalDivider()
-                }
-            }
-        }
-    }
 }

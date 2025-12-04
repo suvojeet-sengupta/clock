@@ -256,7 +256,10 @@ fun MainScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable<Screen.Clock> { ClockScreen() }
-            composable<Screen.WorldClock> { com.suvojeet.clock.ui.clock.WorldClockScreen() }
+            composable<Screen.WorldClock> { com.suvojeet.clock.ui.clock.WorldClockScreen(navController) }
+            composable<Screen.AddLocation> { 
+                com.suvojeet.clock.ui.clock.AddLocationScreen(navController) 
+            }
             composable<Screen.Alarm> { AlarmScreen() }
             composable<Screen.Timer> { TimerScreen() }
             composable<Screen.Stopwatch> { StopwatchScreen() }

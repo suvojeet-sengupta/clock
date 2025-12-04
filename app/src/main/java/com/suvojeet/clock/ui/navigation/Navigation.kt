@@ -20,4 +20,7 @@ sealed class Screen {
 
     @Serializable
     object WorldClock : Screen()
+
+    @Serializable
+    object AddLocation : Screen()
 }
