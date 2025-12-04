@@ -82,6 +82,19 @@ class MainActivity : ComponentActivity() {
                     com.suvojeet.clock.data.alexa.AlexaAuthManager.saveToken(this@MainActivity, token)
                     Toast.makeText(this@MainActivity, "Alexa Linked Successfully!", Toast.LENGTH_SHORT).show()
                 }
+            }
+
+            override fun onError(ae: com.amazon.identity.auth.device.AuthError?) {
+                Toast.makeText(this@MainActivity, "Login Failed: ${ae?.message}", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onCancel(cancellation: com.amazon.identity.auth.device.api.authorization.AuthCancellation?) {
+                Toast.makeText(this@MainActivity, "Cancelled", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        checkPermissions()
+        handleSetAlarmIntent(intent)
 
         setContent {
             CosmicTheme {
