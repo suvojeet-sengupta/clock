@@ -50,72 +50,82 @@ fun AlarmScreen() {
     var selectedAlarm by remember { mutableStateOf<AlarmEntity?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val scope = rememberCoroutineScope()
-    val fabCornerSize = remember { androidx.compose.animation.core.Animatable(24f) }
-
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { 
-                    scope.launch {
-                        // Morph to square (faster)
-                        fabCornerSize.animateTo(
-                            targetValue = 4f,
-                            animationSpec = androidx.compose.animation.core.tween(150)
-                        )
-                        // Open sheet immediately after squish
-                        selectedAlarm = null
-                        showBottomSheet = true 
-                        
-                        // Morph back to original concurrently with sheet opening
-                        fabCornerSize.animateTo(
-                            targetValue = 24f,
-                            animationSpec = androidx.compose.animation.core.spring(
-                                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-                            )
-                        )
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(fabCornerSize.value.dp)
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Alarm")
-            }
-        }
+        containerColor = Color(0xFFF2F2F7) // Light gray background like the design
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
         ) {
-            if (alarms.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "No alarms set",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(alarms) { alarm ->
-                        AlarmItem(
-                            alarm = alarm,
-                            onToggle = { viewModel.toggleAlarm(alarm) },
-                            onClick = {
-                                selectedAlarm = alarm
-                                showBottomSheet = true
-                            }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = "Alarm Clock",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp
+                    ),
+                    color = Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (alarms.isEmpty()) {
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "No alarms set",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp) // Space for bottom button
+                    ) {
+                        items(alarms) { alarm ->
+                            AlarmItem(
+                                alarm = alarm,
+                                onToggle = { viewModel.toggleAlarm(alarm) },
+                                onClick = {
+                                    selectedAlarm = alarm
+                                    showBottomSheet = true
+                                }
+                            )
+                        }
+                    }
                 }
+            }
+
+            // Bottom Button
+            Button(
+                onClick = {
+                    selectedAlarm = null
+                    showBottomSheet = true
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2C3E50), // Dark blue/gray from design
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "Set New Alarm",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
             }
         }
 
@@ -151,60 +161,43 @@ fun AlarmItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    val displayTime = try {
-                        LocalTime.parse(alarm.time).format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
-                    } catch (e: Exception) {
-                        alarm.time // Fallback or already formatted
-                    }
-                    Text(
-                        text = displayTime.uppercase(),
-                        style = MaterialTheme.typography.displayMedium.copy(fontSize = 42.sp),
-                        fontWeight = FontWeight.Bold,
-                        color = if (alarm.isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    // Parse time to check AM/PM if needed, or just rely on 24h format for now.
-                    // Ideally we should format based on system preference.
-                }
-                
-                if (alarm.label.isNotEmpty() || alarm.daysOfWeek.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = buildString {
-                            if (alarm.label.isNotEmpty()) append(alarm.label)
-                            if (alarm.label.isNotEmpty() && alarm.daysOfWeek.isNotEmpty()) append(" • ")
-                            if (alarm.daysOfWeek.isNotEmpty()) {
-                                append(formatDays(alarm.daysOfWeek))
-                            }
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            val displayTime = try {
+                LocalTime.parse(alarm.time).format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+            } catch (e: Exception) {
+                alarm.time
             }
+
+            Text(
+                text = displayTime,
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = Color.Black
+            )
             
             Switch(
                 checked = alarm.isEnabled,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
-                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF81C784), // Light green like design
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFE0E0E0),
+                    uncheckedBorderColor = Color.Transparent
                 )
             )
         }

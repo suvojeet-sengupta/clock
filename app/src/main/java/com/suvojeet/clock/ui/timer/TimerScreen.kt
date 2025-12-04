@@ -2,6 +2,7 @@ package com.suvojeet.clock.ui.timer
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,140 +46,142 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val infiniteTransition = rememberInfiniteTransition(label = "Pulsing")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isRunning) 1.1f else 1.0f, // Only pulse when running
+        targetValue = if (isRunning) 1.05f else 1.0f, // Only pulse when running
         animationSpec = infiniteRepeatable(
             animation = tween(1000),
             repeatMode = RepeatMode.Reverse
         ), label = "Scale"
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceContainer
+    Scaffold(
+        containerColor = Color(0xFFF2F2F7) // Light gray background
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
+        ) {
+            if (totalTime == 0L) {
+                // IDLE STATE: Time Picker
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Set Timer",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.Black
                     )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        if (totalTime == 0L) {
-            // IDLE STATE: Time Picker
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Set Timer",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TimeInput(value = hoursInput, onValueChange = { if (it.length <= 2) hoursInput = it }, label = "h")
-                    Text(":", style = MaterialTheme.typography.displayMedium, modifier = Modifier.padding(horizontal = 8.dp))
-                    TimeInput(value = minutesInput, onValueChange = { if (it.length <= 2) minutesInput = it }, label = "m")
-                    Text(":", style = MaterialTheme.typography.displayMedium, modifier = Modifier.padding(horizontal = 8.dp))
-                    TimeInput(value = secondsInput, onValueChange = { if (it.length <= 2) secondsInput = it }, label = "s")
-                }
-
-                Spacer(modifier = Modifier.height(48.dp))
-
-                Button(
-                    onClick = {
-                        val h = hoursInput.toIntOrNull() ?: 0
-                        val m = minutesInput.toIntOrNull() ?: 0
-                        val s = secondsInput.toIntOrNull() ?: 0
-                        if (h > 0 || m > 0 || s > 0) {
-                            viewModel.setTimer(h, m, s)
-                            viewModel.startTimer()
-                        }
-                    },
-                    modifier = Modifier
-                        .height(56.dp)
-                        .width(200.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Start", style = MaterialTheme.typography.titleMedium)
-                }
-            }
-        } else {
-            // RUNNING/PAUSED STATE
-            // Background pulsing circle
-            Box(
-                modifier = Modifier
-                    .size(250.dp)
-                    .scale(pulseScale)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
-            )
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Time Display
-                val hours = (timeLeft / 1000) / 3600
-                val minutes = ((timeLeft / 1000) % 3600) / 60
-                val seconds = (timeLeft / 1000) % 60
-
-                Text(
-                    text = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Thin
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Spacer(modifier = Modifier.height(48.dp))
-
-                // Controls
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = { if (isRunning) viewModel.pauseTimer() else viewModel.startTimer() },
-                        modifier = Modifier
-                            .height(56.dp)
-                            .weight(1f),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isRunning) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary,
-                            contentColor = if (isRunning) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimary
-                        )
+                    Spacer(modifier = Modifier.height(48.dp))
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isRunning) "Pause" else "Resume", style = MaterialTheme.typography.titleMedium)
+                        TimeInput(value = hoursInput, onValueChange = { if (it.length <= 2) hoursInput = it }, label = "h")
+                        Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                        TimeInput(value = minutesInput, onValueChange = { if (it.length <= 2) minutesInput = it }, label = "m")
+                        Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                        TimeInput(value = secondsInput, onValueChange = { if (it.length <= 2) secondsInput = it }, label = "s")
                     }
 
+                    Spacer(modifier = Modifier.height(64.dp))
+
                     Button(
-                        onClick = { viewModel.resetTimer() },
+                        onClick = {
+                            val h = hoursInput.toIntOrNull() ?: 0
+                            val m = minutesInput.toIntOrNull() ?: 0
+                            val s = secondsInput.toIntOrNull() ?: 0
+                            if (h > 0 || m > 0 || s > 0) {
+                                viewModel.setTimer(h, m, s)
+                                viewModel.startTimer()
+                            }
+                        },
                         modifier = Modifier
                             .height(56.dp)
-                            .weight(1f),
-                        shape = RoundedCornerShape(28.dp),
+                            .width(200.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            containerColor = Color(0xFF2C3E50), // Dark Blue
+                            contentColor = Color.White
                         )
                     ) {
-                        Icon(Icons.Filled.Stop, contentDescription = null)
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cancel", style = MaterialTheme.typography.titleMedium)
+                        Text("Start", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+            } else {
+                // RUNNING/PAUSED STATE
+                // Background pulsing circle
+                Box(
+                    modifier = Modifier
+                        .size(280.dp)
+                        .scale(pulseScale)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE0E0E0), CircleShape)
+                )
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Time Display
+                    val hours = (timeLeft / 1000) / 3600
+                    val minutes = ((timeLeft / 1000) % 3600) / 60
+                    val seconds = (timeLeft / 1000) % 60
+
+                    Text(
+                        text = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds),
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 60.sp,
+                            fontWeight = FontWeight.Light,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                        ),
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(64.dp))
+
+                    // Controls
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(horizontal = 32.dp)
+                    ) {
+                        Button(
+                            onClick = { if (isRunning) viewModel.pauseTimer() else viewModel.startTimer() },
+                            modifier = Modifier
+                                .height(56.dp)
+                                .weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isRunning) Color(0xFFFFB74D) else Color(0xFF2C3E50),
+                                contentColor = if (isRunning) Color.Black else Color.White
+                            )
+                        ) {
+                            Icon(if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (isRunning) "Pause" else "Resume", style = MaterialTheme.typography.titleMedium)
+                        }
+
+                        Button(
+                            onClick = { viewModel.resetTimer() },
+                            modifier = Modifier
+                                .height(56.dp)
+                                .weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFFD32F2F)
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                        ) {
+                            Icon(Icons.Filled.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Cancel", style = MaterialTheme.typography.titleMedium)
+                        }
                     }
                 }
             }
@@ -201,23 +204,30 @@ fun TimeInput(
                     onValueChange(it) 
                 }
             },
-            modifier = Modifier.width(80.dp),
+            modifier = Modifier
+                .width(80.dp)
+                .background(Color.White, RoundedCornerShape(8.dp)),
             textStyle = TextStyle(
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                focusedBorderColor = MaterialTheme.colorScheme.primary
-            )
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color(0xFF2C3E50),
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
+            ),
+            shape = RoundedCornerShape(8.dp)
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color.Gray
         )
     }
 }

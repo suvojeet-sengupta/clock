@@ -2,6 +2,7 @@ package com.suvojeet.clock.ui.stopwatch
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -39,153 +40,160 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
     val infiniteTransition = rememberInfiniteTransition(label = "Pulsing")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isRunning) 1.1f else 1.0f,
+        targetValue = if (isRunning) 1.05f else 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000),
             repeatMode = RepeatMode.Reverse
         ), label = "Scale"
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceContainer
-                    )
-                )
-            )
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Stopwatch Display with Pulsing Background
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(300.dp) // Container size
+    Scaffold(
+        containerColor = Color(0xFFF2F2F7) // Light gray background
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Stopwatch Display with Pulsing Background
             Box(
-                modifier = Modifier
-                    .size(250.dp)
-                    .scale(pulseScale)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
-            )
-            
-            Text(
-                text = formatTime(elapsedTime),
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 60.sp,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                    fontWeight = FontWeight.Thin
-                ),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Controls
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Button(
-                onClick = { if (isRunning) viewModel.pauseStopwatch() else viewModel.startStopwatch() },
-                modifier = Modifier
-                    .height(56.dp)
-                    .weight(1f),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isRunning) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primary,
-                    contentColor = if (isRunning) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onPrimary
-                )
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(300.dp)
             ) {
-                Icon(
-                    imageVector = if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (isRunning) "Pause" else "Start"
+                Box(
+                    modifier = Modifier
+                        .size(280.dp)
+                        .scale(pulseScale)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE0E0E0), CircleShape)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (isRunning) "Pause" else "Start", style = MaterialTheme.typography.titleMedium)
+                
+                Text(
+                    text = formatTime(elapsedTime),
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 60.sp,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        fontWeight = FontWeight.Light
+                    ),
+                    color = Color.Black
+                )
             }
-            
-            if (isRunning) {
-                Button(
-                    onClick = { viewModel.lap() },
-                    modifier = Modifier
-                        .height(56.dp)
-                        .weight(1f),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                ) {
-                    Icon(Icons.Filled.Flag, contentDescription = "Lap")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Lap", style = MaterialTheme.typography.titleMedium)
-                }
-            } else {
-                Button(
-                    onClick = { viewModel.resetStopwatch() },
-                    modifier = Modifier
-                        .height(56.dp)
-                        .weight(1f),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                ) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Reset")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Reset", style = MaterialTheme.typography.titleMedium)
-                }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        // Laps List
-        if (laps.isNotEmpty()) {
-            Text(
-                text = "Laps",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.Start)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            LazyColumn(
+            // Controls
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                itemsIndexed(laps) { index, lapTime ->
-                    Row(
+                Button(
+                    onClick = { if (isRunning) viewModel.pauseStopwatch() else viewModel.startStopwatch() },
+                    modifier = Modifier
+                        .height(56.dp)
+                        .weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isRunning) Color(0xFFFFB74D) else Color(0xFF2C3E50), // Orange for pause, Dark Blue for start
+                        contentColor = if (isRunning) Color.Black else Color.White
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = if (isRunning) "Pause" else "Start"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isRunning) "Pause" else "Start", style = MaterialTheme.typography.titleMedium)
+                }
+                
+                if (isRunning) {
+                    Button(
+                        onClick = { viewModel.lap() },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .height(56.dp)
+                            .weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
                     ) {
-                        Text(
-                            text = "Lap ${laps.size - index}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = formatTime(lapTime),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Icon(Icons.Filled.Flag, contentDescription = "Lap")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Lap", style = MaterialTheme.typography.titleMedium)
+                    }
+                } else {
+                    Button(
+                        onClick = { viewModel.resetStopwatch() },
+                        modifier = Modifier
+                            .height(56.dp)
+                            .weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFFD32F2F) // Red text for reset
+                        ),
+                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                    ) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Reset")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Reset", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Laps List
+            if (laps.isNotEmpty()) {
+                Text(
+                    text = "Laps",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    itemsIndexed(laps) { index, lapTime ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Lap ${laps.size - index}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = formatTime(lapTime),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = Color.Black
+                                )
+                            }
+                        }
                     }
                 }
             }

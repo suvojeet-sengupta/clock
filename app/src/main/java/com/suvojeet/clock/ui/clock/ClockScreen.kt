@@ -64,7 +64,7 @@ fun ClockScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(Color(0xFFF2F2F7)), // Light gray background
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -369,7 +369,7 @@ fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
     Text(
         text = time.format(formatter).uppercase(),
         style = MaterialTheme.typography.displayLarge.copy(fontSize = 48.sp),
-        color = MaterialTheme.colorScheme.onBackground
+        color = Color.Black
     )
 }
 
