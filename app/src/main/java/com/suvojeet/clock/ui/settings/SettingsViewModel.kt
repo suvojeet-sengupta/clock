@@ -52,6 +52,17 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
             repository.setMathDifficulty(difficulty)
         }
     }
+
+    private val _isAlexaLinked = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val isAlexaLinked: StateFlow<Boolean> = _isAlexaLinked
+
+    fun checkAlexaLinkStatus(context: android.content.Context) {
+        _isAlexaLinked.value = com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(context)
+    }
+
+    fun updateAlexaLinkStatus(linked: Boolean) {
+        _isAlexaLinked.value = linked
+    }
 }
 
 

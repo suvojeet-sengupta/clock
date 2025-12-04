@@ -24,7 +24,8 @@ import com.suvojeet.clock.data.settings.MathDifficulty
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onLinkAlexaClick: () -> Unit
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     
@@ -244,6 +245,51 @@ fun SettingsScreen(
                             }
                         }
                     )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+            // Alexa Integration
+            val isAlexaLinked by viewModel.isAlexaLinked.collectAsState()
+            val context = LocalContext.current
+            
+            // Check status on composition
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                viewModel.checkAlexaLinkStatus(context)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Placeholder for Alexa Icon if not available, or use a generic icon
+                    Icon(
+                        imageVector = Icons.Default.Public, // Using Public as placeholder for Alexa
+                        contentDescription = "Alexa",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Link with Alexa",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (isAlexaLinked) "Connected to Alexa" else "Not connected",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isAlexaLinked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Button(
+                    onClick = { onLinkAlexaClick() }
+                ) {
+                    Text(if (isAlexaLinked) "Disconnect" else "Connect")
                 }
             }
         }
