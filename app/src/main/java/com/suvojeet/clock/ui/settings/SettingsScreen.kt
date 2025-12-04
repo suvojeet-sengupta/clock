@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -267,7 +268,7 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Placeholder for Alexa Icon if not available, or use a generic icon
                     Icon(
-                        imageVector = Icons.Default.Info, // Using Info as placeholder for Alexa
+                        imageVector = Icons.Filled.Info, // Using Info as placeholder for Alexa
                         contentDescription = "Alexa",
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
