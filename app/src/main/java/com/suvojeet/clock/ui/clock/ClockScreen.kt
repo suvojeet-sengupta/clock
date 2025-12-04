@@ -64,7 +64,7 @@ fun ClockScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F2F7)), // Light gray background
+            .background(Color.Black), // Dark background
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -86,7 +86,8 @@ fun ClockScreen() {
     if (showStyleSelector) {
         ModalBottomSheet(
             onDismissRequest = { showStyleSelector = false },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = Color(0xFF1C1C1E) // Dark gray
         ) {
             ClockStyleSelector(
                 currentStyle = clockStyle,
@@ -113,6 +114,7 @@ fun ClockStyleSelector(
         Text(
             text = "Select Clock Style",
             style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
@@ -128,7 +130,7 @@ fun ClockStyleSelector(
                         .combinedClickable(onClick = { onStyleSelected(style) })
                         .padding(8.dp)
                         .background(
-                            if (currentStyle == style) MaterialTheme.colorScheme.primaryContainer 
+                            if (currentStyle == style) Color(0xFF2C3E50) 
                             else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
@@ -138,7 +140,8 @@ fun ClockStyleSelector(
                     Text(
                         text = style.name,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = if (currentStyle == style) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (currentStyle == style) FontWeight.Bold else FontWeight.Normal,
+                        color = Color.White
                     )
                 }
             }
@@ -162,7 +165,7 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
             .clip(CircleShape)
             .background(
                 brush = Brush.radialGradient(
-                    colors = listOf(surfaceVariant, background)
+                    colors = listOf(Color(0xFF2C3E50), Color.Black) // Dark gradient
                 )
             ),
         contentAlignment = Alignment.Center
@@ -172,10 +175,10 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
             val radius = size.minDimension / 2
 
             when (style) {
-                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor, onSurface)
-                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, primaryColor, secondaryColor)
-                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
-                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
+                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, Color.White, Color.Gray, Color.Red, Color.White)
+                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, Color.White, Color.Gray)
+                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, Color.Cyan, Color.Magenta, Color.Yellow)
+                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, Color.White, Color.Gray, Color.Red)
             }
         }
     }
@@ -369,7 +372,7 @@ fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
     Text(
         text = time.format(formatter).uppercase(),
         style = MaterialTheme.typography.displayLarge.copy(fontSize = 48.sp),
-        color = Color.Black
+        color = Color.White
     )
 }
 

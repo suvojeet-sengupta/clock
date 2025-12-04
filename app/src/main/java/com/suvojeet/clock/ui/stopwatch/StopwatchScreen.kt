@@ -48,7 +48,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
     )
 
     Scaffold(
-        containerColor = Color(0xFFF2F2F7) // Light gray background
+        containerColor = Color.Black // Dark background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -118,10 +118,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                             .weight(1f),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color.Black
+                            containerColor = Color(0xFF1C1C1E), // Dark gray
+                            contentColor = Color.White
                         ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
                     ) {
                         Icon(Icons.Filled.Flag, contentDescription = "Lap")
                         Spacer(modifier = Modifier.width(8.dp))
@@ -135,10 +135,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                             .weight(1f),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
+                            containerColor = Color(0xFF1C1C1E), // Dark gray
                             contentColor = Color(0xFFD32F2F) // Red text for reset
                         ),
-                         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                         border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
                     ) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Reset")
                         Spacer(modifier = Modifier.width(8.dp))
@@ -154,7 +154,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                 Text(
                     text = "Laps",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black,
+                    color = Color.White,
                     modifier = Modifier.align(Alignment.Start)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -168,9 +168,9 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)), // Dark gray
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -190,7 +190,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    color = Color.Black
+                                    color = Color.White
                                 )
                             }
                         }

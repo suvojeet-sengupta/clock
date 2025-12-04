@@ -54,7 +54,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     )
 
     Scaffold(
-        containerColor = Color(0xFFF2F2F7) // Light gray background
+        containerColor = Color.Black // Dark background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -71,7 +71,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                     Text(
                         text = "Set Timer",
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black
+                        color = Color.White
                     )
                     Spacer(modifier = Modifier.height(48.dp))
                     
@@ -173,10 +173,10 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                                 .weight(1f),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
+                                containerColor = Color(0xFF1C1C1E), // Dark gray
                                 contentColor = Color(0xFFD32F2F)
                             ),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0))
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
                         ) {
                             Icon(Icons.Filled.Stop, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -206,20 +206,20 @@ fun TimeInput(
             },
             modifier = Modifier
                 .width(80.dp)
-                .background(Color.White, RoundedCornerShape(8.dp)),
+                .background(Color(0xFF1C1C1E), RoundedCornerShape(8.dp)), // Dark gray
             textStyle = TextStyle(
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.White
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = Color(0xFF2C3E50),
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
+                unfocusedContainerColor = Color(0xFF1C1C1E),
+                focusedContainerColor = Color(0xFF1C1C1E)
             ),
             shape = RoundedCornerShape(8.dp)
         )

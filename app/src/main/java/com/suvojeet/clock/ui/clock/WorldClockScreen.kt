@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,7 +22,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -57,86 +55,90 @@ fun WorldClockScreen() {
     var showZoneSearch by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color(0xFFF2F2F7) // Light gray background
+        containerColor = Color.Black // Dark background
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
         ) {
-            // Header Section
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp, bottom = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "World Clock",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = currentTime.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 64.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color.Black
-                    )
-                }
-            }
-
-            // World Clock Items
-            items(selectedWorldClocks.size) { index ->
-                val clock = selectedWorldClocks[index]
-                WorldClockItem(
-                    data = clock,
-                    is24HourFormat = is24HourFormat,
-                    onDelete = { viewModel.removeWorldClock(clock.zoneId) }
+            // Digital Clock Header
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                val pattern = if (is24HourFormat) "HH:mm" else "h:mm a"
+                val formatter = DateTimeFormatter.ofPattern(pattern)
+                Text(
+                    text = currentTime.format(formatter),
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.Light
+                    ),
+                    color = Color.White
                 )
             }
 
-            // Add New Locations Section
-            item {
-                Column(
-                    modifier = Modifier.padding(top = 24.dp, bottom = 32.dp)
-                ) {
-                    Text(
-                        text = "Add New Locations",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 12.dp)
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "World Clock",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(selectedWorldClocks.size) { index ->
+                    val clock = selectedWorldClocks[index]
+                    WorldClockItem(
+                        data = clock,
+                        is24HourFormat = is24HourFormat,
+                        onDelete = { viewModel.removeWorldClock(clock.zoneId) }
                     )
-                    
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Add Button
-                        AddLocationCard(
-                            text = "Add City",
-                            icon = Icons.Default.Add,
-                            onClick = { showZoneSearch = true }
-                        )
-                        
-                        // Placeholder buttons for design fidelity
-                        AddLocationCard(
-                            text = "London",
-                            icon = null, // Could use specific icons if available
-                            onClick = { viewModel.addWorldClock("Europe/London") }
-                        )
-                        
-                        AddLocationCard(
-                            text = "Tokyo",
-                            icon = null,
-                            onClick = { viewModel.addWorldClock("Asia/Tokyo") }
-                        )
-                    }
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Add New Locations Section
+            Text(
+                text = "Add New Locations",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AddLocationCard(
+                    text = "Add City",
+                    icon = Icons.Default.Add,
+                    onClick = { showZoneSearch = true },
+                    modifier = Modifier.weight(1f)
+                )
+                AddLocationCard(
+                    text = "London",
+                    onClick = { viewModel.addWorldClock("Europe/London") },
+                    modifier = Modifier.weight(1f)
+                )
+                AddLocationCard(
+                    text = "Tokyo",
+                    onClick = { viewModel.addWorldClock("Asia/Tokyo") },
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -156,40 +158,27 @@ fun WorldClockScreen() {
 @Composable
 fun AddLocationCard(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector?,
-    onClick: () -> Unit
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .size(100.dp)
+        modifier = modifier
+            .height(80.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF2C3E50) // Dark card
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)) // Dark gray
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Icon(icon, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
-                )
+                Text(text, color = Color.White, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -201,7 +190,7 @@ fun WorldClockItem(
     is24HourFormat: Boolean,
     onDelete: () -> Unit
 ) {
-    val pattern = if (is24HourFormat) "HH:mm" else "hh:mm a"
+    val pattern = if (is24HourFormat) "HH:mm" else "h:mm a"
     val formatter = DateTimeFormatter.ofPattern(pattern)
 
     SwipeToDismissBox(
@@ -210,6 +199,7 @@ fun WorldClockItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.Red)
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
@@ -225,8 +215,8 @@ fun WorldClockItem(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)), // Dark gray
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -237,27 +227,21 @@ fun WorldClockItem(
                 ) {
                     Column {
                         Text(
-                            text = data.time.format(formatter),
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color.Black
+                            text = data.zoneId.split("/").last().replace("_", " "),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = Color.White
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Today, ${data.offset}HRS", // Simplified offset display
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Today, ${data.offset}HRS",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                     }
-                    
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = data.city,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        // Optional: Add more info or just keep it clean
-                    }
+                    Text(
+                        text = data.time.format(formatter),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
                 }
             }
         },

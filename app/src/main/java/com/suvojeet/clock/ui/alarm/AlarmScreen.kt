@@ -51,7 +51,7 @@ fun AlarmScreen() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
-        containerColor = Color(0xFFF2F2F7) // Light gray background like the design
+        containerColor = Color.Black // Dark background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -72,7 +72,7 @@ fun AlarmScreen() {
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp
                     ),
-                    color = Color.Black
+                    color = Color.White
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -82,7 +82,7 @@ fun AlarmScreen() {
                         Text(
                             text = "No alarms set",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color.Gray
                         )
                     }
                 } else {
@@ -118,7 +118,7 @@ fun AlarmScreen() {
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2C3E50), // Dark blue/gray from design
+                    containerColor = Color(0xFF2C3E50), // Dark blue/gray
                     contentColor = Color.White
                 )
             ) {
@@ -163,9 +163,9 @@ fun AlarmItem(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = Color(0xFF1C1C1E) // Dark gray card
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -186,7 +186,7 @@ fun AlarmItem(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Medium
                 ),
-                color = Color.Black
+                color = Color.White
             )
             
             Switch(
@@ -194,9 +194,9 @@ fun AlarmItem(
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF81C784), // Light green like design
+                    checkedTrackColor = Color(0xFF81C784), // Light green
                     uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFE0E0E0),
+                    uncheckedTrackColor = Color.Gray,
                     uncheckedBorderColor = Color.Transparent
                 )
             )
