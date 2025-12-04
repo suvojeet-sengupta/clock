@@ -33,10 +33,10 @@ object AlexaAuthManager {
     }
 
     fun startLogin(requestContext: RequestContext) {
-        val alexaScope = com.amazon.identity.auth.device.api.authorization.ScopeFactory.scopeNamed("alexa::alerts:reminders:skill:readwrite")
+        // Use only standard Login with Amazon scopes
         AuthorizationManager.authorize(
             AuthorizeRequest.Builder(requestContext)
-                .addScopes(ProfileScope.profile(), ProfileScope.postalCode(), alexaScope)
+                .addScopes(ProfileScope.profile(), ProfileScope.postalCode())
                 .build()
         )
     }
