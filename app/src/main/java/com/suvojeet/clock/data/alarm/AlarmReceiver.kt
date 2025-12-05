@@ -60,7 +60,7 @@ class AlarmReceiver : BroadcastReceiver() {
             )
 
             val notification = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Alarm")
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
