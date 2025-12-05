@@ -3,6 +3,7 @@ package com.suvojeet.clock.ui.timer
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.util.Locale
 
 import androidx.hilt.navigation.compose.hiltViewModel
+
+/**
+ * Data class representing a preset timer option
+ */
+data class TimerPreset(
+    val label: String,
+    val minutes: Int,
+    val seconds: Int = 0
+)
+
+/**
+ * Common timer presets for quick selection
+ */
+private val timerPresets = listOf(
+    TimerPreset("1 min", 1),
+    TimerPreset("3 min", 3),
+    TimerPreset("5 min", 5),
+    TimerPreset("10 min", 10),
+    TimerPreset("15 min", 15),
+    TimerPreset("30 min", 30)
+)
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
@@ -65,7 +87,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(32.dp))
                 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -93,7 +115,60 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(64.dp))
+                // Quick preset buttons - only show when timer is not running
+                if (totalTime == 0L) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        text = "Quick Start",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    // Two rows of 3 presets each
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        ) {
+                            timerPresets.take(3).forEach { preset ->
+                                PresetChip(
+                                    preset = preset,
+                                    onClick = {
+                                        hoursInput = "00"
+                                        minutesInput = preset.minutes.toString().padStart(2, '0')
+                                        secondsInput = preset.seconds.toString().padStart(2, '0')
+                                        viewModel.setTimer(0, preset.minutes, preset.seconds)
+                                        viewModel.startTimer()
+                                    }
+                                )
+                            }
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        ) {
+                            timerPresets.drop(3).forEach { preset ->
+                                PresetChip(
+                                    preset = preset,
+                                    onClick = {
+                                        hoursInput = "00"
+                                        minutesInput = preset.minutes.toString().padStart(2, '0')
+                                        secondsInput = preset.seconds.toString().padStart(2, '0')
+                                        viewModel.setTimer(0, preset.minutes, preset.seconds)
+                                        viewModel.startTimer()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
 
                 if (totalTime == 0L) {
                     Button(
@@ -115,7 +190,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                             contentColor = Color.White
                         )
                     ) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                        Icon(Icons.Filled.PlayArrow, contentDescription = "Start timer")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Start", style = MaterialTheme.typography.titleMedium)
                     }
@@ -135,7 +210,10 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                                 contentColor = if (isRunning) Color.Black else Color.White
                             )
                         ) {
-                            Icon(if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = null)
+                            Icon(
+                                if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, 
+                                contentDescription = if (isRunning) "Pause timer" else "Resume timer"
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(if (isRunning) "Pause" else "Resume", style = MaterialTheme.typography.titleMedium)
                         }
@@ -152,7 +230,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                             ),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
                         ) {
-                            Icon(Icons.Filled.Stop, contentDescription = null)
+                            Icon(Icons.Filled.Stop, contentDescription = "Stop timer")
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Cancel", style = MaterialTheme.typography.titleMedium)
                         }
@@ -160,6 +238,27 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PresetChip(
+    preset: TimerPreset,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        color = Color(0xFF1C1C1E),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Text(
+            text = preset.label,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
+            color = Color.White,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 

@@ -13,6 +13,9 @@ interface AlarmDao {
     @Query("SELECT * FROM alarms")
     fun getAllAlarms(): Flow<List<AlarmEntity>>
 
+    @Query("SELECT * FROM alarms WHERE isEnabled = 1")
+    fun getEnabledAlarms(): Flow<List<AlarmEntity>>
+
     @Query("SELECT * FROM alarms WHERE id = :id")
     suspend fun getAlarmById(id: Int): AlarmEntity?
 

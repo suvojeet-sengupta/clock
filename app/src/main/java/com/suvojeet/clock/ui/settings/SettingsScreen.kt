@@ -318,6 +318,73 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
+            // Max Snooze Count
+            val maxSnoozeCount by viewModel.maxSnoozeCount.collectAsState()
+            var showMaxSnoozeDialog by remember { mutableStateOf(false) }
+            val snoozeCountOptions = listOf(0, 1, 2, 3, 5, 10) // 0 means unlimited
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showMaxSnoozeDialog = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Max Snooze Count",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (maxSnoozeCount == 0) "Unlimited" else "$maxSnoozeCount times",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            if (showMaxSnoozeDialog) {
+                AlertDialog(
+                    onDismissRequest = { showMaxSnoozeDialog = false },
+                    title = { Text("Select Max Snooze Count") },
+                    text = {
+                        Column {
+                            snoozeCountOptions.forEach { count ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.setMaxSnoozeCount(count)
+                                            showMaxSnoozeDialog = false
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = (count == maxSnoozeCount),
+                                        onClick = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (count == 0) "Unlimited" else "$count times",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showMaxSnoozeDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
             // Alexa Integration
             val isAlexaLinked by viewModel.isAlexaLinked.collectAsState()
             val context = LocalContext.current

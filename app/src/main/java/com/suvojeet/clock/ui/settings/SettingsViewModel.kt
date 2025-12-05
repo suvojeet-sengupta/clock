@@ -62,6 +62,15 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
         }
     }
 
+    val maxSnoozeCount: StateFlow<Int> = repository.maxSnoozeCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 3)
+
+    fun setMaxSnoozeCount(count: Int) {
+        viewModelScope.launch {
+            repository.setMaxSnoozeCount(count)
+        }
+    }
+
     private val _isAlexaLinked = kotlinx.coroutines.flow.MutableStateFlow(false)
     val isAlexaLinked: StateFlow<Boolean> = _isAlexaLinked
 
@@ -73,5 +82,3 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
         _isAlexaLinked.value = linked
     }
 }
-
-

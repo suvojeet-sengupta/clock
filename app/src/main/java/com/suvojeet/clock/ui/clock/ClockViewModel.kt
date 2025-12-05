@@ -8,18 +8,34 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModelProvider
+import com.suvojeet.clock.data.alarm.AlarmEntity
+import com.suvojeet.clock.data.alarm.AlarmRepository
 import com.suvojeet.clock.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalTime
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+/**
+ * Represents the next upcoming alarm with calculated time information
+ */
+data class NextAlarmInfo(
+    val alarm: AlarmEntity,
+    val nextTriggerTime: LocalDateTime,
+    val timeUntilAlarm: String
+)
+
 @HiltViewModel
-class ClockViewModel @Inject constructor(private val settingsRepository: SettingsRepository) : ViewModel() {
+class ClockViewModel @Inject constructor(
+    private val settingsRepository: SettingsRepository,
+    private val alarmRepository: AlarmRepository
+) : ViewModel() {
 
     private val _currentTime = MutableStateFlow(LocalTime.now())
     val currentTime: StateFlow<LocalTime> = _currentTime.asStateFlow()
@@ -29,6 +45,83 @@ class ClockViewModel @Inject constructor(private val settingsRepository: Setting
 
     val clockStyle: StateFlow<ClockStyle> = settingsRepository.clockStyle
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ClockStyle.CLASSIC)
+    
+    /**
+     * Calculates and provides the next upcoming alarm
+     */
+    val nextAlarm: StateFlow<NextAlarmInfo?> = alarmRepository.enabledAlarms
+        .map { alarms -> calculateNextAlarm(alarms) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private fun calculateNextAlarm(alarms: List<AlarmEntity>): NextAlarmInfo? {
+        if (alarms.isEmpty()) return null
+        
+        val now = LocalDateTime.now()
+        
+        return alarms.mapNotNull { alarm ->
+            try {
+                val alarmTime = LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("HH:mm"))
+                var nextTrigger = now.with(alarmTime)
+                
+                // If the alarm time has passed today, schedule for tomorrow
+                if (nextTrigger.isBefore(now)) {
+                    nextTrigger = nextTrigger.plusDays(1)
+                }
+                
+                // If alarm has specific days, find the next matching day
+                if (alarm.daysOfWeek.isNotEmpty()) {
+                    val currentDayOfWeek = now.dayOfWeek.value // 1=Monday, 7=Sunday
+                    var daysToAdd = 0
+                    var found = false
+                    
+                    for (i in 0..7) {
+                        val checkDay = ((currentDayOfWeek - 1 + i) % 7) + 1
+                        if (alarm.daysOfWeek.contains(checkDay)) {
+                            if (i == 0 && nextTrigger.isBefore(now)) {
+                                // Today's alarm already passed, try next occurrence
+                                continue
+                            }
+                            daysToAdd = i
+                            found = true
+                            break
+                        }
+                    }
+                    
+                    if (!found) return@mapNotNull null
+                    nextTrigger = now.with(alarmTime).plusDays(daysToAdd.toLong())
+                    if (nextTrigger.isBefore(now)) {
+                        nextTrigger = nextTrigger.plusDays(7)
+                    }
+                }
+                
+                NextAlarmInfo(
+                    alarm = alarm,
+                    nextTriggerTime = nextTrigger,
+                    timeUntilAlarm = formatTimeUntil(now, nextTrigger)
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }.minByOrNull { it.nextTriggerTime }
+    }
+
+    private fun formatTimeUntil(from: LocalDateTime, to: LocalDateTime): String {
+        val duration = java.time.Duration.between(from, to)
+        val hours = duration.toHours()
+        val minutes = duration.toMinutes() % 60
+        
+        return when {
+            hours > 24 -> {
+                val days = hours / 24
+                if (days == 1L) "in 1 day" else "in $days days"
+            }
+            hours > 0 -> {
+                if (minutes > 0) "in ${hours}h ${minutes}m" else "in ${hours}h"
+            }
+            minutes > 0 -> "in ${minutes}m"
+            else -> "now"
+        }
+    }
 
     fun updateClockStyle(style: ClockStyle) {
         viewModelScope.launch {
@@ -115,5 +208,3 @@ data class WorldClockData(
     val offset: String,
     val timeDifferenceHours: Int = 0 // Difference from local time in hours
 )
-
-
