@@ -322,6 +322,9 @@ fun AlarmBottomSheet(
                     } else {
                         selectedDays + day
                     }
+                },
+                onQuickSelect = { days ->
+                    selectedDays = days
                 }
             )
             
@@ -483,7 +486,8 @@ fun AlarmBottomSheet(
 @Composable
 fun DaySelector(
     selectedDays: List<Int>,
-    onDaySelected: (Int) -> Unit
+    onDaySelected: (Int) -> Unit,
+    onQuickSelect: (List<Int>) -> Unit = {}
 ) {
     val days = listOf("S", "M", "T", "W", "T", "F", "S")
     // 1 = Monday, 7 = Sunday in java.time.DayOfWeek, but let's map 1..7 to Mon..Sun
@@ -492,32 +496,66 @@ fun DaySelector(
     // Let's map: Sun=7, Mon=1, Tue=2, ... Sat=6.
     val dayValues = listOf(7, 1, 2, 3, 4, 5, 6)
     
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        days.forEachIndexed { index, dayLabel ->
-            val dayValue = dayValues[index]
-            val isSelected = selectedDays.contains(dayValue)
-            
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isSelected) MaterialTheme.colorScheme.primaryContainer 
-                        else Color.Transparent
+    val weekdays = listOf(1, 2, 3, 4, 5) // Mon-Fri
+    val weekends = listOf(6, 7) // Sat-Sun
+    val everyday = listOf(1, 2, 3, 4, 5, 6, 7)
+    
+    Column {
+        // Quick select buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = selectedDays.sorted() == weekdays.sorted(),
+                onClick = { onQuickSelect(weekdays) },
+                label = { Text("Weekdays") },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = selectedDays.sorted() == weekends.sorted(),
+                onClick = { onQuickSelect(weekends) },
+                label = { Text("Weekends") },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = selectedDays.sorted() == everyday.sorted(),
+                onClick = { onQuickSelect(everyday) },
+                label = { Text("Everyday") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Individual day selection
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            days.forEachIndexed { index, dayLabel ->
+                val dayValue = dayValues[index]
+                val isSelected = selectedDays.contains(dayValue)
+                
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primaryContainer 
+                            else Color.Transparent
+                        )
+                        .clickable { onDaySelected(dayValue) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = dayLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer 
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    .clickable { onDaySelected(dayValue) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = dayLabel,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer 
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                }
             }
         }
     }

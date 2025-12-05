@@ -155,7 +155,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    itemsIndexed(laps) { index, lapTime ->
+                    itemsIndexed(laps) { index, lapData ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -175,14 +175,23 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = Color.Gray
                                 )
-                                Text(
-                                    text = formatTime(lapTime),
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color.White
-                                )
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = formatTime(lapData.cumulativeTime),
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "+${formatTime(lapData.splitTime)}",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                        ),
+                                        color = Color(0xFF81C784) // Green for split time
+                                    )
+                                }
                             }
                         }
                     }

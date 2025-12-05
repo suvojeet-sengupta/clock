@@ -21,11 +21,15 @@ class StopwatchViewModel @Inject constructor() : ViewModel() {
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
-    private val _laps = MutableStateFlow<List<Long>>(emptyList())
-    val laps: StateFlow<List<Long>> = _laps.asStateFlow()
+    // Each lap entry contains: cumulative time, split time (time since last lap)
+    data class LapData(val cumulativeTime: Long, val splitTime: Long)
+    
+    private val _laps = MutableStateFlow<List<LapData>>(emptyList())
+    val laps: StateFlow<List<LapData>> = _laps.asStateFlow()
 
     private var stopwatchJob: Job? = null
     private var startTime = 0L
+    private var lastLapTime = 0L
 
     fun startStopwatch() {
         if (!_isRunning.value) {
@@ -49,12 +53,17 @@ class StopwatchViewModel @Inject constructor() : ViewModel() {
         pauseStopwatch()
         _elapsedTime.value = 0L
         _laps.value = emptyList()
+        lastLapTime = 0L
     }
 
     fun lap() {
         if (_isRunning.value) {
+            val currentTime = _elapsedTime.value
+            val splitTime = currentTime - lastLapTime
+            lastLapTime = currentTime
+            
             val currentLaps = _laps.value.toMutableList()
-            currentLaps.add(0, _elapsedTime.value) // Add to top
+            currentLaps.add(0, LapData(currentTime, splitTime)) // Add to top
             _laps.value = currentLaps
         }
     }

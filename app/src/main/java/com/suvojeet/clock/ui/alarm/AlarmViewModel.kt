@@ -18,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AlarmViewModel @Inject constructor(
     private val repository: AlarmRepository,
-    private val scheduler: AlarmScheduler
+    private val scheduler: AlarmScheduler,
+    private val alexaRepository: com.suvojeet.clock.data.alexa.AlexaRepository
 ) : ViewModel() {
 
     val allAlarms: StateFlow<List<AlarmEntity>> = repository.allAlarms
@@ -27,17 +28,26 @@ class AlarmViewModel @Inject constructor(
     fun addAlarm(alarm: AlarmEntity) {
         viewModelScope.launch {
             val id = repository.insert(alarm)
-            // insert returns Long (rowId), but we need the ID from entity which is auto-generated.
-            // Actually Room's insert returns rowId. If ID is auto-generated, we might need to fetch it or assume it matches if we reload.
-            // For simplicity, let's assume we can schedule it. But wait, we need the ID for PendingIntent.
-            // Let's create a copy with the ID if possible, or just schedule.
-            // A better way is to insert, then the Flow updates, and we schedule based on that? 
-            // Or just use the ID if we can get it.
-            // Let's assume for now we schedule using the alarm object.
-            // Note: If ID is 0, PendingIntent might conflict if we have multiple 0s before DB assigns ID.
-            // Ideally we should get the ID back.
-            // Let's update repository to return Long, and we use that as ID.
             scheduler.schedule(alarm.copy(id = id.toInt()))
+            
+            // Trigger Alexa Reminder
+            // We need to parse the time string "HH:mm" to millis
+            try {
+                val parts = alarm.time.split(":")
+                val hour = parts[0].toInt()
+                val minute = parts[1].toInt()
+                
+                val now = java.time.LocalDateTime.now()
+                var targetTime = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0)
+                if (targetTime.isBefore(now)) {
+                    targetTime = targetTime.plusDays(1)
+                }
+                val timeInMillis = targetTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                
+                alexaRepository.createReminder(alarm.label, timeInMillis)
+            } catch (e: Exception) {
+                // Ignore parsing errors
+            }
         }
     }
 

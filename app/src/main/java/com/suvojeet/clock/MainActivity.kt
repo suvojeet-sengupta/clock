@@ -48,10 +48,13 @@ import com.suvojeet.clock.ui.clock.ClockScreen
 import com.suvojeet.clock.ui.alarm.AlarmScreen
 import com.suvojeet.clock.ui.timer.TimerScreen
 import com.suvojeet.clock.ui.stopwatch.StopwatchScreen
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.util.Log
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -64,17 +67,58 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var scheduler: com.suvojeet.clock.data.alarm.AlarmScheduler
 
+    @Inject
+    lateinit var alexaRepository: com.suvojeet.clock.data.alexa.AlexaRepository
+
+    private lateinit var requestContext: com.amazon.identity.auth.device.api.workflow.RequestContext
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        requestContext = com.amazon.identity.auth.device.api.workflow.RequestContext.create(this)
+        requestContext.registerListener(object : com.amazon.identity.auth.device.api.authorization.AuthorizeListener() {
+            override fun onSuccess(result: com.amazon.identity.auth.device.api.authorization.AuthorizeResult?) {
+                val token = result?.accessToken
+                if (token != null) {
+                    com.suvojeet.clock.data.alexa.AlexaAuthManager.saveToken(this@MainActivity, token)
+                    Toast.makeText(this@MainActivity, "Alexa Linked Successfully!", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onError(ae: com.amazon.identity.auth.device.AuthError?) {
+                Toast.makeText(this@MainActivity, "Login Failed: ${ae?.message}", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onCancel(cancellation: com.amazon.identity.auth.device.api.authorization.AuthCancellation?) {
+                Toast.makeText(this@MainActivity, "Cancelled", Toast.LENGTH_SHORT).show()
+            }
+        })
+
         checkPermissions()
         handleSetAlarmIntent(intent)
 
         setContent {
             CosmicTheme {
-                MainScreen()
+                MainScreen(
+                    onLinkAlexaClick = {
+                        if (com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(this)) {
+                            com.suvojeet.clock.data.alexa.AlexaAuthManager.logout(this) {
+                                runOnUiThread {
+                                    Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            com.suvojeet.clock.data.alexa.AlexaAuthManager.startLogin(requestContext)
+                        }
+                    }
+                )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requestContext.onResume()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -90,26 +134,48 @@ class MainActivity : ComponentActivity() {
             val skipUi = intent.getBooleanExtra(AlarmClock.EXTRA_SKIP_UI, false)
 
             if (hour != -1 && minutes != -1) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val time = LocalTime.of(hour, minutes)
-                    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-                    val alarm = com.suvojeet.clock.data.alarm.AlarmEntity(
-                        time = time.format(formatter),
-                        label = message,
-                        isEnabled = true
-                    )
-                    val newAlarmId = repository.insert(alarm)
-                    
-                    val scheduledAlarm = alarm.copy(id = newAlarmId.toInt())
-                    scheduler.schedule(scheduledAlarm)
-                    
-                    if (!skipUi) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            Toast.makeText(this@MainActivity, "Alarm set for ${time.format(formatter)}", Toast.LENGTH_LONG).show()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val time = LocalTime.of(hour, minutes)
+                        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                        val alarm = com.suvojeet.clock.data.alarm.AlarmEntity(
+                            time = time.format(formatter),
+                            label = message,
+                            isEnabled = true
+                        )
+                        val newAlarmId = repository.insert(alarm)
+                        
+                        val scheduledAlarm = alarm.copy(id = newAlarmId.toInt())
+                        scheduler.schedule(scheduledAlarm)
+                        
+                        // Trigger Alexa Reminder if linked
+                        try {
+                            if (com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(this@MainActivity)) {
+                                val now = LocalDateTime.now()
+                                var targetTime = now.withHour(hour).withMinute(minutes).withSecond(0).withNano(0)
+                                if (targetTime.isBefore(now)) {
+                                    targetTime = targetTime.plusDays(1)
+                                }
+                                val timeInMillis = targetTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                
+                                alexaRepository.createReminder(message, timeInMillis)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Failed to create Alexa reminder: ${e.message}", e)
                         }
-                    } else {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            Toast.makeText(this@MainActivity, "Alarm set for ${time.format(formatter)} (UI skipped)", Toast.LENGTH_SHORT).show()
+
+                        launch(Dispatchers.Main) {
+                            val toastMessage = if (!skipUi) {
+                                "Alarm set for ${time.format(formatter)}"
+                            } else {
+                                "Alarm set for ${time.format(formatter)} (UI skipped)"
+                            }
+                            Toast.makeText(this@MainActivity, toastMessage, Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Failed to set alarm: ${e.message}", e)
+                        launch(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "Failed to set alarm: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -152,7 +218,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(onLinkAlexaClick: () -> Unit) {
     val navController = rememberNavController()
     var showMenu by remember { mutableStateOf(false) }
     
@@ -265,7 +331,8 @@ fun MainScreen() {
             composable<Screen.Stopwatch> { StopwatchScreen() }
             composable<Screen.Settings> { 
                 com.suvojeet.clock.ui.settings.SettingsScreen(
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onLinkAlexaClick = onLinkAlexaClick
                 ) 
             }
         }

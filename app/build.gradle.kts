@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(files("libs/login-with-amazon-sdk.jar"))
     
     // Room
     implementation(libs.androidx.room.runtime)
@@ -74,6 +75,10 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     // Hilt
     implementation(libs.hilt.android)

@@ -52,6 +52,26 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
             repository.setMathDifficulty(difficulty)
         }
     }
+
+    val snoozeDuration: StateFlow<Int> = repository.snoozeDuration
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 10)
+
+    fun setSnoozeDuration(minutes: Int) {
+        viewModelScope.launch {
+            repository.setSnoozeDuration(minutes)
+        }
+    }
+
+    private val _isAlexaLinked = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val isAlexaLinked: StateFlow<Boolean> = _isAlexaLinked
+
+    fun checkAlexaLinkStatus(context: android.content.Context) {
+        _isAlexaLinked.value = com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(context)
+    }
+
+    fun updateAlexaLinkStatus(linked: Boolean) {
+        _isAlexaLinked.value = linked
+    }
 }
 
 
