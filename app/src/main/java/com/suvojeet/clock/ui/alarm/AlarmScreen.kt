@@ -221,8 +221,8 @@ fun AlarmItem(
                 checked = alarm.isEnabled,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF81C784), // Light green
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
                     uncheckedThumbColor = Color.White,
                     uncheckedTrackColor = Color.Gray,
                     uncheckedBorderColor = Color.Transparent
