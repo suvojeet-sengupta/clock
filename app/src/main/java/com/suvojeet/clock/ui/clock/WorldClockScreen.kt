@@ -17,19 +17,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +54,7 @@ import java.time.format.DateTimeFormatter
 
 import androidx.navigation.NavController
 import com.suvojeet.clock.ui.navigation.Screen
+import com.suvojeet.clock.util.HapticFeedback
 
 @Composable
 fun WorldClockScreen(navController: NavController) {
@@ -175,6 +183,7 @@ fun AddLocationCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorldClockItem(
     data: WorldClockData,
@@ -183,6 +192,10 @@ fun WorldClockItem(
 ) {
     val pattern = if (is24HourFormat) "HH:mm" else "h:mm a"
     val formatter = DateTimeFormatter.ofPattern(pattern)
+    val view = LocalView.current
+    
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    val dismissState = rememberSwipeToDismissBoxState()
     
     // Format time difference
     val timeDiffText = when {
@@ -195,9 +208,44 @@ fun WorldClockItem(
         data.timeDifferenceHours > 0 -> Color(0xFF81C784) // Green for ahead
         else -> Color(0xFFE57373) // Red for behind
     }
+    
+    // Handle swipe to delete
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            showDeleteConfirmation = true
+            dismissState.reset()
+        }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Remove World Clock") },
+            text = { 
+                Text("Are you sure you want to remove ${data.zoneId.split("/").last().replace("_", " ")}?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        HapticFeedback.performConfirm(view)
+                        onDelete()
+                        showDeleteConfirmation = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     SwipeToDismissBox(
-        state = rememberSwipeToDismissBoxState(),
+        state = dismissState,
         backgroundContent = {
             Box(
                 modifier = Modifier

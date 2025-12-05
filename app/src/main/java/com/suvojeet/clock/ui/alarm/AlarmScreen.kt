@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +33,7 @@ import com.suvojeet.clock.ClockApplication
 import com.suvojeet.clock.data.alarm.AlarmEntity
 import com.suvojeet.clock.data.alarm.AlarmRepository
 import com.suvojeet.clock.ui.theme.*
+import com.suvojeet.clock.util.HapticFeedback
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -45,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun AlarmScreen() {
     val viewModel: AlarmViewModel = hiltViewModel()
+    val view = LocalView.current
     
     val alarms by viewModel.allAlarms.collectAsState()
     
@@ -96,8 +99,12 @@ fun AlarmScreen() {
                         items(alarms) { alarm ->
                             AlarmItem(
                                 alarm = alarm,
-                                onToggle = { viewModel.toggleAlarm(alarm) },
+                                onToggle = { 
+                                    HapticFeedback.performToggle(view)
+                                    viewModel.toggleAlarm(alarm) 
+                                },
                                 onClick = {
+                                    HapticFeedback.performClick(view)
                                     selectedAlarm = alarm
                                     showBottomSheet = true
                                 }
@@ -110,6 +117,7 @@ fun AlarmScreen() {
             // Bottom Button
             Button(
                 onClick = {
+                    HapticFeedback.performClick(view)
                     selectedAlarm = null
                     showBottomSheet = true
                 },
@@ -136,6 +144,7 @@ fun AlarmScreen() {
                 alarm = selectedAlarm,
                 onDismiss = { showBottomSheet = false },
                 onSave = { alarm ->
+                    HapticFeedback.performConfirm(view)
                     if (alarm.id == 0) {
                         viewModel.addAlarm(alarm)
                     } else {

@@ -1,5 +1,6 @@
 package com.suvojeet.clock.ui.stopwatch
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -66,5 +68,51 @@ class StopwatchViewModel @Inject constructor() : ViewModel() {
             currentLaps.add(0, LapData(currentTime, splitTime)) // Add to top
             _laps.value = currentLaps
         }
+    }
+    
+    /**
+     * Format lap times as a shareable string
+     */
+    fun formatLapsForShare(): String {
+        val lapsData = _laps.value
+        if (lapsData.isEmpty()) return "No laps recorded"
+        
+        val sb = StringBuilder()
+        sb.appendLine("🏃 Stopwatch Lap Times")
+        sb.appendLine("━━━━━━━━━━━━━━━━━━━━")
+        
+        lapsData.reversed().forEachIndexed { index, lap ->
+            val lapNum = index + 1
+            val cumTime = formatTimeForShare(lap.cumulativeTime)
+            val splitTime = formatTimeForShare(lap.splitTime)
+            sb.appendLine("Lap $lapNum: $cumTime (+$splitTime)")
+        }
+        
+        sb.appendLine("━━━━━━━━━━━━━━━━━━━━")
+        sb.appendLine("Total: ${formatTimeForShare(_elapsedTime.value)}")
+        
+        return sb.toString()
+    }
+    
+    private fun formatTimeForShare(millis: Long): String {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        val hundredths = (millis % 1000) / 10
+        return String.format(Locale.getDefault(), "%02d:%02d.%02d", minutes, seconds, hundredths)
+    }
+    
+    /**
+     * Create a share intent for lap times.
+     * The composable should handle starting the activity.
+     * @return Intent for sharing lap times
+     */
+    fun createShareIntent(): Intent {
+        val shareText = formatLapsForShare()
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        return Intent.createChooser(sendIntent, "Share Lap Times")
     }
 }
