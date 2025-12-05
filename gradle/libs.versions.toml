@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.3"
+agp = "8.10.1"
 gradle = "8.14.3"
 kotlin = "2.0.21"
 coreKtx = "1.17.0"
