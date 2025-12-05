@@ -23,6 +23,9 @@ class SettingsRepository(private val context: Context) {
     private val MATH_DIFFICULTY = stringPreferencesKey("math_difficulty")
     private val SNOOZE_DURATION = intPreferencesKey("snooze_duration")
     private val MAX_SNOOZE_COUNT = intPreferencesKey("max_snooze_count")
+    private val APP_THEME = stringPreferencesKey("app_theme")
+    private val HIGH_CONTRAST_MODE = booleanPreferencesKey("high_contrast_mode")
+    private val HAPTIC_FEEDBACK_ENABLED = booleanPreferencesKey("haptic_feedback_enabled")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -138,6 +141,47 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit { preferences ->
             val currentZones = preferences[SELECTED_WORLD_CLOCK_ZONES] ?: emptySet()
             preferences[SELECTED_WORLD_CLOCK_ZONES] = currentZones - zoneId
+        }
+    }
+
+    // App Theme
+    val appTheme: Flow<AppTheme> = context.dataStore.data
+        .map { preferences ->
+            val themeName = preferences[APP_THEME] ?: AppTheme.COSMIC.name
+            try {
+                AppTheme.valueOf(themeName)
+            } catch (e: IllegalArgumentException) {
+                AppTheme.COSMIC
+            }
+        }
+
+    suspend fun setAppTheme(theme: AppTheme) {
+        context.dataStore.edit { preferences ->
+            preferences[APP_THEME] = theme.name
+        }
+    }
+
+    // High Contrast Mode for accessibility
+    val highContrastMode: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[HIGH_CONTRAST_MODE] ?: false
+        }
+
+    suspend fun setHighContrastMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HIGH_CONTRAST_MODE] = enabled
+        }
+    }
+
+    // Haptic Feedback
+    val hapticFeedbackEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[HAPTIC_FEEDBACK_ENABLED] ?: true // Enabled by default
+        }
+
+    suspend fun setHapticFeedbackEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HAPTIC_FEEDBACK_ENABLED] = enabled
         }
     }
 }

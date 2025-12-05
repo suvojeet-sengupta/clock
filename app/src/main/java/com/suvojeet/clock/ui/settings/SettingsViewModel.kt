@@ -3,6 +3,7 @@ package com.suvojeet.clock.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.suvojeet.clock.data.settings.AppTheme
 import com.suvojeet.clock.data.settings.DismissMethod
 import com.suvojeet.clock.data.settings.MathDifficulty
 import com.suvojeet.clock.data.settings.SettingsRepository
@@ -80,5 +81,35 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
 
     fun updateAlexaLinkStatus(linked: Boolean) {
         _isAlexaLinked.value = linked
+    }
+
+    // Theme selection
+    val appTheme: StateFlow<AppTheme> = repository.appTheme
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppTheme.COSMIC)
+
+    fun setAppTheme(theme: AppTheme) {
+        viewModelScope.launch {
+            repository.setAppTheme(theme)
+        }
+    }
+
+    // High Contrast Mode
+    val highContrastMode: StateFlow<Boolean> = repository.highContrastMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setHighContrastMode(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setHighContrastMode(enabled)
+        }
+    }
+
+    // Haptic Feedback
+    val hapticFeedbackEnabled: StateFlow<Boolean> = repository.hapticFeedbackEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setHapticFeedbackEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setHapticFeedbackEnabled(enabled)
+        }
     }
 }

@@ -14,8 +14,43 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
+
+# Keep Room entities and DAOs
+-keep class com.suvojeet.clock.data.alarm.AlarmEntity { *; }
+-keep class com.suvojeet.clock.data.alarm.AlarmDao { *; }
+
+# Keep Hilt generated classes
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+
+# Keep Compose related classes
+-dontwarn androidx.compose.**
+
+# Keep Kotlin serialization
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+
+# Keep Amazon Login SDK classes
+-keep class com.amazon.identity.auth.device.** { *; }
+
+# Keep Retrofit and Gson
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+-keep class com.squareup.retrofit2.** { *; }
+
+# Keep enum classes
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# Keep data classes for serialization
+-keep class com.suvojeet.clock.data.settings.AppTheme { *; }
+-keep class com.suvojeet.clock.data.settings.DismissMethod { *; }
+-keep class com.suvojeet.clock.data.settings.MathDifficulty { *; }

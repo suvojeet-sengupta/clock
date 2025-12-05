@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,11 +22,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.suvojeet.clock.ui.theme.ElectricBlue
+import com.suvojeet.clock.util.HapticFeedback
 import java.util.Locale
 
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +39,8 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
     val elapsedTime by viewModel.elapsedTime.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
     val laps by viewModel.laps.collectAsState()
+    val context = LocalContext.current
+    val view = LocalView.current
 
     // Pulsing animation
     val infiniteTransition = rememberInfiniteTransition(label = "Pulsing")
@@ -83,7 +89,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(
-                    onClick = { if (isRunning) viewModel.pauseStopwatch() else viewModel.startStopwatch() },
+                    onClick = { 
+                        HapticFeedback.performClick(view)
+                        if (isRunning) viewModel.pauseStopwatch() else viewModel.startStopwatch() 
+                    },
                     modifier = Modifier
                         .height(56.dp)
                         .weight(1f),
@@ -103,7 +112,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                 
                 if (isRunning) {
                     Button(
-                        onClick = { viewModel.lap() },
+                        onClick = { 
+                            HapticFeedback.performClick(view)
+                            viewModel.lap() 
+                        },
                         modifier = Modifier
                             .height(56.dp)
                             .weight(1f),
@@ -120,7 +132,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                     }
                 } else {
                     Button(
-                        onClick = { viewModel.resetStopwatch() },
+                        onClick = { 
+                            HapticFeedback.performClick(view)
+                            viewModel.resetStopwatch() 
+                        },
                         modifier = Modifier
                             .height(56.dp)
                             .weight(1f),
@@ -142,12 +157,29 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
 
             // Laps List
             if (laps.isNotEmpty()) {
-                Text(
-                    text = "Laps",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Start)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Laps",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
+                    IconButton(
+                        onClick = { 
+                            HapticFeedback.performClick(view)
+                            viewModel.shareLaps(context) 
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Share, 
+                            contentDescription = "Share lap times",
+                            tint = Color.White
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 LazyColumn(
