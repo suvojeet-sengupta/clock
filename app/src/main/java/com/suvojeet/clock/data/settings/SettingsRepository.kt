@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.suvojeet.clock.ui.clock.ClockStyle
@@ -20,7 +21,7 @@ class SettingsRepository(private val context: Context) {
     private val GRADUAL_VOLUME = booleanPreferencesKey("gradual_volume")
     private val DISMISS_METHOD = stringPreferencesKey("dismiss_method")
     private val MATH_DIFFICULTY = stringPreferencesKey("math_difficulty")
-    private val SNOOZE_DURATION = androidx.datastore.preferences.core.intPreferencesKey("snooze_duration")
+    private val SNOOZE_DURATION = intPreferencesKey("snooze_duration")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
