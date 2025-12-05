@@ -70,10 +70,19 @@ class ClockViewModel @Inject constructor(
                 
                 // If alarm has specific days, find the next matching day
                 if (alarm.daysOfWeek.isNotEmpty()) {
-                    val currentDayOfWeek = now.dayOfWeek.value // 1=Monday, 7=Sunday
+                    // Java's DayOfWeek: Monday=1, Tuesday=2, ..., Sunday=7
+                    // This matches our stored format in AlarmEntity
+                    val currentDayOfWeek = now.dayOfWeek.value
                     var daysToAdd = 0
                     var found = false
                     
+                    // Check up to 8 days ahead (today + 7 more days) to find next matching day
+                    // The formula ((currentDayOfWeek - 1 + i) % 7) + 1 cycles through days:
+                    // Example: If today is Wednesday (3):
+                    //   i=0: ((3-1+0) % 7) + 1 = 3 (Wed)
+                    //   i=1: ((3-1+1) % 7) + 1 = 4 (Thu)
+                    //   ...
+                    //   i=7: ((3-1+7) % 7) + 1 = 3 (next Wed)
                     for (i in 0..7) {
                         val checkDay = ((currentDayOfWeek - 1 + i) % 7) + 1
                         if (alarm.daysOfWeek.contains(checkDay)) {

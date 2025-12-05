@@ -33,7 +33,11 @@ import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
- * Data class representing a preset timer option
+ * Data class representing a preset timer option for quick selection.
+ * 
+ * @property label Display text shown on the preset button (e.g., "5 min")
+ * @property minutes Number of minutes for this preset (0-59)
+ * @property seconds Number of seconds for this preset (0-59, defaults to 0)
  */
 data class TimerPreset(
     val label: String,
@@ -68,6 +72,18 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val displayHours = if (totalTime > 0) ((timeLeft / 1000) / 3600).toString().padStart(2, '0') else hoursInput
     val displayMinutes = if (totalTime > 0) (((timeLeft / 1000) % 3600) / 60).toString().padStart(2, '0') else minutesInput
     val displaySeconds = if (totalTime > 0) ((timeLeft / 1000) % 60).toString().padStart(2, '0') else secondsInput
+    
+    /**
+     * Helper function to start a timer from a preset.
+     * Updates the input fields and starts the timer with the preset values.
+     */
+    fun startPresetTimer(preset: TimerPreset) {
+        hoursInput = "00"
+        minutesInput = preset.minutes.toString().padStart(2, '0')
+        secondsInput = preset.seconds.toString().padStart(2, '0')
+        viewModel.setTimer(0, preset.minutes, preset.seconds)
+        viewModel.startTimer()
+    }
 
     Scaffold(
         containerColor = Color.Black // Dark background
@@ -138,13 +154,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                             timerPresets.take(3).forEach { preset ->
                                 PresetChip(
                                     preset = preset,
-                                    onClick = {
-                                        hoursInput = "00"
-                                        minutesInput = preset.minutes.toString().padStart(2, '0')
-                                        secondsInput = preset.seconds.toString().padStart(2, '0')
-                                        viewModel.setTimer(0, preset.minutes, preset.seconds)
-                                        viewModel.startTimer()
-                                    }
+                                    onClick = { startPresetTimer(preset) }
                                 )
                             }
                         }
@@ -155,13 +165,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                             timerPresets.drop(3).forEach { preset ->
                                 PresetChip(
                                     preset = preset,
-                                    onClick = {
-                                        hoursInput = "00"
-                                        minutesInput = preset.minutes.toString().padStart(2, '0')
-                                        secondsInput = preset.seconds.toString().padStart(2, '0')
-                                        viewModel.setTimer(0, preset.minutes, preset.seconds)
-                                        viewModel.startTimer()
-                                    }
+                                    onClick = { startPresetTimer(preset) }
                                 )
                             }
                         }
