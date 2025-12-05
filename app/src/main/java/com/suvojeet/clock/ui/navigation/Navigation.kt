@@ -23,4 +23,7 @@ sealed class Screen {
 
     @Serializable
     object AddLocation : Screen()
+
+    @Serializable
+    object SleepTimer : Screen()
 }

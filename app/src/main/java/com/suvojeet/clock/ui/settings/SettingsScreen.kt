@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -34,7 +35,8 @@ import com.suvojeet.clock.util.HapticFeedback
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
-    onLinkAlexaClick: () -> Unit
+    onLinkAlexaClick: () -> Unit,
+    onSleepTimerClick: () -> Unit = {}
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val view = LocalView.current
@@ -186,6 +188,40 @@ fun SettingsScreen(
                         }
                     }
                 )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            
+            // Sleep Timer
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { 
+                        if (hapticFeedbackEnabled) HapticFeedback.performClick(view)
+                        onSleepTimerClick() 
+                    }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Bedtime,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Sleep Timer",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Fall asleep with soothing sounds",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

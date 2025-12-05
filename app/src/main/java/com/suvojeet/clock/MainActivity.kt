@@ -343,8 +343,14 @@ fun MainScreen(onLinkAlexaClick: () -> Unit) {
             composable<Screen.Settings> { 
                 com.suvojeet.clock.ui.settings.SettingsScreen(
                     onBackClick = { navController.popBackStack() },
-                    onLinkAlexaClick = onLinkAlexaClick
+                    onLinkAlexaClick = onLinkAlexaClick,
+                    onSleepTimerClick = { navController.navigate(Screen.SleepTimer) }
                 ) 
+            }
+            composable<Screen.SleepTimer> {
+                com.suvojeet.clock.ui.sleeptimer.SleepTimerScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
             }
         }
     }

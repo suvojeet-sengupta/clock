@@ -73,7 +73,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                 Text(
                     text = formatTime(elapsedTime),
                     style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 80.sp, // Larger font since circle is gone
+                        fontSize = 56.sp, // Reduced for better visual balance
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                         fontWeight = FontWeight.Light
                     ),
