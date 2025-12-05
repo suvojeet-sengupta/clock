@@ -183,6 +183,18 @@ fun WorldClockItem(
 ) {
     val pattern = if (is24HourFormat) "HH:mm" else "h:mm a"
     val formatter = DateTimeFormatter.ofPattern(pattern)
+    
+    // Format time difference
+    val timeDiffText = when {
+        data.timeDifferenceHours == 0 -> "Same time"
+        data.timeDifferenceHours > 0 -> "+${data.timeDifferenceHours}h"
+        else -> "${data.timeDifferenceHours}h"
+    }
+    val timeDiffColor = when {
+        data.timeDifferenceHours == 0 -> Color.Gray
+        data.timeDifferenceHours > 0 -> Color(0xFF81C784) // Green for ahead
+        else -> Color(0xFFE57373) // Red for behind
+    }
 
     SwipeToDismissBox(
         state = rememberSwipeToDismissBoxState(),
@@ -222,11 +234,21 @@ fun WorldClockItem(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = Color.White
                         )
-                        Text(
-                            text = "Today, ${data.offset}HRS",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Today, ${data.offset}HRS",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "• $timeDiffText",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = timeDiffColor
+                            )
+                        }
                     }
                     Text(
                         text = data.time.format(formatter),

@@ -38,14 +38,22 @@ class ClockViewModel @Inject constructor(private val settingsRepository: Setting
 
     val selectedWorldClocks: StateFlow<List<WorldClockData>> = settingsRepository.selectedWorldClockZones
         .map { zoneIds ->
+            val localZone = java.time.ZoneId.systemDefault()
+            val localOffset = localZone.rules.getOffset(java.time.Instant.now())
+            
             zoneIds.map { zoneId ->
                 val zone = java.time.ZoneId.of(zoneId)
                 val now = java.time.ZonedDateTime.now(zone)
+                val zoneOffset = zone.rules.getOffset(java.time.Instant.now())
+                val diffSeconds = zoneOffset.totalSeconds - localOffset.totalSeconds
+                val diffHours = diffSeconds / 3600
+                
                 WorldClockData(
                     zoneId = zoneId,
                     city = zoneId.split("/").last().replace("_", " "),
                     time = now.toLocalTime(),
-                    offset = zone.rules.getOffset(java.time.Instant.now()).id.replace("Z", "+00:00")
+                    offset = zone.rules.getOffset(java.time.Instant.now()).id.replace("Z", "+00:00"),
+                    timeDifferenceHours = diffHours
                 )
             }.sortedBy { it.city }
         }
@@ -104,7 +112,8 @@ data class WorldClockData(
     val zoneId: String,
     val city: String,
     val time: LocalTime,
-    val offset: String
+    val offset: String,
+    val timeDifferenceHours: Int = 0 // Difference from local time in hours
 )
 
 

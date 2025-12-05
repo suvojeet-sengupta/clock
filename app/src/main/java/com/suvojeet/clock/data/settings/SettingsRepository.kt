@@ -20,6 +20,7 @@ class SettingsRepository(private val context: Context) {
     private val GRADUAL_VOLUME = booleanPreferencesKey("gradual_volume")
     private val DISMISS_METHOD = stringPreferencesKey("dismiss_method")
     private val MATH_DIFFICULTY = stringPreferencesKey("math_difficulty")
+    private val SNOOZE_DURATION = androidx.datastore.preferences.core.intPreferencesKey("snooze_duration")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -90,6 +91,18 @@ class SettingsRepository(private val context: Context) {
             preferences[MATH_DIFFICULTY] = difficulty.name
         }
     }
+
+    val snoozeDuration: Flow<Int> = context.dataStore.data
+        .map { preferences ->
+            preferences[SNOOZE_DURATION] ?: 10 // Default to 10 minutes
+        }
+
+    suspend fun setSnoozeDuration(minutes: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SNOOZE_DURATION] = minutes
+        }
+    }
+
     private val SELECTED_WORLD_CLOCK_ZONES = androidx.datastore.preferences.core.stringSetPreferencesKey("selected_world_clock_zones")
 
     val selectedWorldClockZones: Flow<Set<String>> = context.dataStore.data

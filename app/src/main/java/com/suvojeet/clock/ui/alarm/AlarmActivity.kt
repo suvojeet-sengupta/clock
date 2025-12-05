@@ -76,6 +76,7 @@ class AlarmActivity : ComponentActivity() {
             val gradualVolume = settingsRepository.gradualVolume.first()
             val dismissMethod = settingsRepository.dismissMethod.first()
             val mathDifficulty = settingsRepository.mathDifficulty.first()
+            val snoozeDuration = settingsRepository.snoozeDuration.first()
             
             startRinging(gradualVolume)
 
@@ -88,11 +89,12 @@ class AlarmActivity : ComponentActivity() {
                         label = label,
                         dismissMethod = dismissMethod,
                         mathDifficulty = mathDifficulty,
+                        snoozeDurationMinutes = snoozeDuration,
                         onDismiss = {
                             dismissAlarm()
                         },
                         onSnooze = {
-                            snoozeAlarm(label, soundUri)
+                            snoozeAlarm(label, soundUri, snoozeDuration)
                         }
                     )
                 }
@@ -204,7 +206,7 @@ class AlarmActivity : ComponentActivity() {
         finish()
     }
 
-    private fun snoozeAlarm(label: String, soundUri: String?) {
+    private fun snoozeAlarm(label: String, soundUri: String?, snoozeDurationMinutes: Int) {
         stopRinging()
         cancelNotification()
 
@@ -220,12 +222,12 @@ class AlarmActivity : ComponentActivity() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val snoozeTime = System.currentTimeMillis() + 10 * 60 * 1000
+        val snoozeTime = System.currentTimeMillis() + snoozeDurationMinutes * 60 * 1000L
         
         val clockInfo = AlarmManager.AlarmClockInfo(snoozeTime, pendingIntent)
         alarmManager.setAlarmClock(clockInfo, pendingIntent)
 
-        Toast.makeText(this, "Snoozed for 10 minutes", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Snoozed for $snoozeDurationMinutes minutes", Toast.LENGTH_SHORT).show()
         finish()
     }
 
@@ -240,6 +242,7 @@ fun AlarmTriggerScreen(
     label: String,
     dismissMethod: DismissMethod,
     mathDifficulty: MathDifficulty,
+    snoozeDurationMinutes: Int,
     onDismiss: () -> Unit,
     onSnooze: () -> Unit
 ) {
@@ -336,7 +339,7 @@ fun AlarmTriggerScreen(
                 ) {
                     Icon(Icons.Default.Snooze, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Snooze (10m)", style = MaterialTheme.typography.titleMedium)
+                    Text("Snooze (${snoozeDurationMinutes}m)", style = MaterialTheme.typography.titleMedium)
                 }
 
                 Button(

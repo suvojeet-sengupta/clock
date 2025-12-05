@@ -251,6 +251,73 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
+            // Snooze Duration
+            val snoozeDuration by viewModel.snoozeDuration.collectAsState()
+            var showSnoozeDurationDialog by remember { mutableStateOf(false) }
+            val snoozeOptions = listOf(5, 10, 15, 20, 30)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showSnoozeDurationDialog = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Snooze Duration",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "$snoozeDuration minutes",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            if (showSnoozeDurationDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSnoozeDurationDialog = false },
+                    title = { Text("Select Snooze Duration") },
+                    text = {
+                        Column {
+                            snoozeOptions.forEach { duration ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.setSnoozeDuration(duration)
+                                            showSnoozeDurationDialog = false
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = (duration == snoozeDuration),
+                                        onClick = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "$duration minutes",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showSnoozeDurationDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
             // Alexa Integration
             val isAlexaLinked by viewModel.isAlexaLinked.collectAsState()
             val context = LocalContext.current

@@ -53,6 +53,15 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
         }
     }
 
+    val snoozeDuration: StateFlow<Int> = repository.snoozeDuration
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 10)
+
+    fun setSnoozeDuration(minutes: Int) {
+        viewModelScope.launch {
+            repository.setSnoozeDuration(minutes)
+        }
+    }
+
     private val _isAlexaLinked = kotlinx.coroutines.flow.MutableStateFlow(false)
     val isAlexaLinked: StateFlow<Boolean> = _isAlexaLinked
 
