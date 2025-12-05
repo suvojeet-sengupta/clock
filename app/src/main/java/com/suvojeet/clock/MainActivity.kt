@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.suvojeet.clock.data.settings.AppTheme
+import com.suvojeet.clock.data.settings.SettingsRepository
 import com.suvojeet.clock.ui.navigation.Screen
 import com.suvojeet.clock.ui.theme.CosmicTheme
 import com.suvojeet.clock.ui.clock.ClockScreen
@@ -50,6 +53,7 @@ import com.suvojeet.clock.ui.timer.TimerScreen
 import com.suvojeet.clock.ui.stopwatch.StopwatchScreen
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import android.util.Log
 import java.time.LocalDateTime
@@ -69,6 +73,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var alexaRepository: com.suvojeet.clock.data.alexa.AlexaRepository
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private lateinit var requestContext: com.amazon.identity.auth.device.api.workflow.RequestContext
 
@@ -98,7 +105,11 @@ class MainActivity : ComponentActivity() {
         handleSetAlarmIntent(intent)
 
         setContent {
-            CosmicTheme {
+            val appTheme by settingsRepository.appTheme
+                .map { it }
+                .collectAsState(initial = AppTheme.COSMIC)
+            
+            CosmicTheme(appTheme = appTheme) {
                 MainScreen(
                     onLinkAlexaClick = {
                         if (com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(this)) {

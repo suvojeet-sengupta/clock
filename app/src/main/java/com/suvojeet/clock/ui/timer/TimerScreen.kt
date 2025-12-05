@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.suvojeet.clock.util.HapticFeedback
 import java.util.Locale
 
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +64,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val timeLeft by viewModel.timeLeft.collectAsState()
     val totalTime by viewModel.totalTime.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
+    val view = LocalView.current
 
     // Input states for the picker - these persist across timer runs
     var hoursInput by remember { mutableStateOf("00") }
@@ -78,6 +81,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
      * Updates the input fields and starts the timer with the preset values.
      */
     fun startPresetTimer(preset: TimerPreset) {
+        HapticFeedback.performClick(view)
         hoursInput = "00"
         minutesInput = preset.minutes.toString().padStart(2, '0')
         secondsInput = preset.seconds.toString().padStart(2, '0')
@@ -177,6 +181,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                 if (totalTime == 0L) {
                     Button(
                         onClick = {
+                            HapticFeedback.performClick(view)
                             val h = hoursInput.toIntOrNull() ?: 0
                             val m = minutesInput.toIntOrNull() ?: 0
                             val s = secondsInput.toIntOrNull() ?: 0
@@ -204,7 +209,10 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                         modifier = Modifier.padding(horizontal = 32.dp)
                     ) {
                         Button(
-                            onClick = { if (isRunning) viewModel.pauseTimer() else viewModel.startTimer() },
+                            onClick = { 
+                                HapticFeedback.performClick(view)
+                                if (isRunning) viewModel.pauseTimer() else viewModel.startTimer() 
+                            },
                             modifier = Modifier
                                 .height(56.dp)
                                 .weight(1f),
@@ -223,7 +231,10 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                         }
 
                         Button(
-                            onClick = { viewModel.stopTimer() },
+                            onClick = { 
+                                HapticFeedback.performClick(view)
+                                viewModel.stopTimer() 
+                            },
                             modifier = Modifier
                                 .height(56.dp)
                                 .weight(1f),
