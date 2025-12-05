@@ -22,16 +22,11 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Setup Gradle Wrapper
-      run: |
-        if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-          echo "gradle-wrapper.jar not found. Generating it using the provisioned Gradle."
-          gradle wrapper
-        fi
-        chmod +x gradlew
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Clean project
-      run: ./gradlew clean
+      run: ./gradlew clean --no-daemon
 
     - name: Decode Keystore
       run: |
