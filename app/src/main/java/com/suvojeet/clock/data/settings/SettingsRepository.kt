@@ -26,6 +26,7 @@ class SettingsRepository(private val context: Context) {
     private val APP_THEME = stringPreferencesKey("app_theme")
     private val HIGH_CONTRAST_MODE = booleanPreferencesKey("high_contrast_mode")
     private val HAPTIC_FEEDBACK_ENABLED = booleanPreferencesKey("haptic_feedback_enabled")
+    private val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -182,6 +183,18 @@ class SettingsRepository(private val context: Context) {
     suspend fun setHapticFeedbackEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HAPTIC_FEEDBACK_ENABLED] = enabled
+        }
+    }
+
+    // Onboarding status
+    val onboardingCompleted: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[ONBOARDING_COMPLETED] ?: false
+        }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[ONBOARDING_COMPLETED] = completed
         }
     }
 }

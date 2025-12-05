@@ -26,4 +26,7 @@ sealed class Screen {
 
     @Serializable
     object SleepTimer : Screen()
+
+    @Serializable
+    object Setup : Screen()
 }

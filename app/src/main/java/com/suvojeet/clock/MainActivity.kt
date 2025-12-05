@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -101,7 +102,6 @@ class MainActivity : ComponentActivity() {
             }
         })
 
-        checkPermissions()
         handleSetAlarmIntent(intent)
 
         setContent {
@@ -109,20 +109,32 @@ class MainActivity : ComponentActivity() {
                 .map { it }
                 .collectAsState(initial = AppTheme.COSMIC)
             
+            val onboardingCompleted by settingsRepository.onboardingCompleted
+                .collectAsState(initial = null)
+            
             CosmicTheme(appTheme = appTheme) {
-                MainScreen(
-                    onLinkAlexaClick = {
-                        if (com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(this)) {
-                            com.suvojeet.clock.data.alexa.AlexaAuthManager.logout(this) {
-                                runOnUiThread {
-                                    Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show()
-                                }
+                // Show loading or nothing while checking onboarding status
+                if (onboardingCompleted != null) {
+                    MainScreen(
+                        showSetup = onboardingCompleted == false,
+                        onSetupComplete = {
+                            lifecycleScope.launch {
+                                settingsRepository.setOnboardingCompleted(true)
                             }
-                        } else {
-                            com.suvojeet.clock.data.alexa.AlexaAuthManager.startLogin(requestContext)
+                        },
+                        onLinkAlexaClick = {
+                            if (com.suvojeet.clock.data.alexa.AlexaAuthManager.isLinked(this)) {
+                                com.suvojeet.clock.data.alexa.AlexaAuthManager.logout(this) {
+                                    runOnUiThread {
+                                        Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            } else {
+                                com.suvojeet.clock.data.alexa.AlexaAuthManager.startLogin(requestContext)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -229,9 +241,22 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(onLinkAlexaClick: () -> Unit) {
+fun MainScreen(
+    showSetup: Boolean,
+    onSetupComplete: () -> Unit,
+    onLinkAlexaClick: () -> Unit
+) {
     val navController = rememberNavController()
     var showMenu by remember { mutableStateOf(false) }
+    
+    // Navigate to setup on first launch
+    LaunchedEffect(showSetup) {
+        if (showSetup) {
+            navController.navigate(Screen.Setup) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -350,6 +375,16 @@ fun MainScreen(onLinkAlexaClick: () -> Unit) {
             composable<Screen.SleepTimer> {
                 com.suvojeet.clock.ui.sleeptimer.SleepTimerScreen(
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable<Screen.Setup> {
+                com.suvojeet.clock.ui.setup.SetupScreen(
+                    onSetupComplete = {
+                        onSetupComplete()
+                        navController.navigate(Screen.Clock) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
         }
