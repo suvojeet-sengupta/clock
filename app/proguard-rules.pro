@@ -44,6 +44,20 @@
 -keep class com.google.gson.** { *; }
 -keep class com.squareup.retrofit2.** { *; }
 
+# Gson TypeToken - Critical for R8
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Keep generic signature of TypeToken and its subclasses
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
+
+# Prevent R8 from stripping interface information from TypeAdapter, TypeAdapterFactory,
+# JsonSerializer, JsonDeserializer instances (so they can be used in @Provides methods)
+-keep,allowobfuscation,allowshrinking interface com.google.gson.TypeAdapterFactory
+-keep,allowobfuscation,allowshrinking interface com.google.gson.JsonSerializer
+-keep,allowobfuscation,allowshrinking interface com.google.gson.JsonDeserializer
+
 # Keep enum classes
 -keepclassmembers enum * {
     public static **[] values();
