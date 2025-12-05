@@ -170,7 +170,8 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                     IconButton(
                         onClick = { 
                             HapticFeedback.performClick(view)
-                            viewModel.shareLaps(context) 
+                            val shareIntent = viewModel.createShareIntent()
+                            context.startActivity(shareIntent)
                         }
                     ) {
                         Icon(

@@ -617,9 +617,10 @@ fun SettingsScreen(
                 }
                 Switch(
                     checked = hapticFeedbackEnabled,
-                    onCheckedChange = { 
-                        if (hapticFeedbackEnabled) HapticFeedback.performToggle(view)
-                        viewModel.setHapticFeedbackEnabled(it) 
+                    onCheckedChange = { newValue ->
+                        // Always provide feedback when toggling, so user can feel the change
+                        HapticFeedback.performToggle(view)
+                        viewModel.setHapticFeedbackEnabled(newValue) 
                     },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.primary,

@@ -1,6 +1,5 @@
 package com.suvojeet.clock.ui.stopwatch
 
-import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -103,17 +102,17 @@ class StopwatchViewModel @Inject constructor() : ViewModel() {
     }
     
     /**
-     * Share lap times using Android share intent
+     * Create a share intent for lap times.
+     * The composable should handle starting the activity.
+     * @return Intent for sharing lap times
      */
-    fun shareLaps(context: Context) {
+    fun createShareIntent(): Intent {
         val shareText = formatLapsForShare()
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareText)
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Lap Times")
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(shareIntent)
+        return Intent.createChooser(sendIntent, "Share Lap Times")
     }
 }
