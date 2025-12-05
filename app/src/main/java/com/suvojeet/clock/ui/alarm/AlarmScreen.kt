@@ -535,21 +535,43 @@ fun DaySelector(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            val isWeekdaysSelected = selectedDays.sorted() == weekdays.sorted()
+            val isWeekendsSelected = selectedDays.sorted() == weekends.sorted()
+            val isEverydaySelected = selectedDays.sorted() == everyday.sorted()
+            
             FilterChip(
-                selected = selectedDays.sorted() == weekdays.sorted(),
-                onClick = { onQuickSelect(weekdays) },
+                selected = isWeekdaysSelected,
+                onClick = { 
+                    if (isWeekdaysSelected) {
+                        onQuickSelect(emptyList()) // Reset/clear
+                    } else {
+                        onQuickSelect(weekdays)
+                    }
+                },
                 label = { Text("Weekdays") },
                 modifier = Modifier.weight(1f)
             )
             FilterChip(
-                selected = selectedDays.sorted() == weekends.sorted(),
-                onClick = { onQuickSelect(weekends) },
+                selected = isWeekendsSelected,
+                onClick = { 
+                    if (isWeekendsSelected) {
+                        onQuickSelect(emptyList()) // Reset/clear
+                    } else {
+                        onQuickSelect(weekends)
+                    }
+                },
                 label = { Text("Weekends") },
                 modifier = Modifier.weight(1f)
             )
             FilterChip(
-                selected = selectedDays.sorted() == everyday.sorted(),
-                onClick = { onQuickSelect(everyday) },
+                selected = isEverydaySelected,
+                onClick = { 
+                    if (isEverydaySelected) {
+                        onQuickSelect(emptyList()) // Reset/clear
+                    } else {
+                        onQuickSelect(everyday)
+                    }
+                },
                 label = { Text("Everyday") },
                 modifier = Modifier.weight(1f)
             )
