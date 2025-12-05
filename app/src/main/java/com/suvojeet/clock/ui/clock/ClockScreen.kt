@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,9 +59,14 @@ fun ClockScreen() {
     val currentTime by viewModel.currentTime.collectAsState()
     val is24HourFormat by viewModel.is24HourFormat.collectAsState()
     val clockStyle by viewModel.clockStyle.collectAsState()
+    val nextAlarm by viewModel.nextAlarm.collectAsState()
     
     var showStyleSelector by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    
+    // Format time for accessibility announcement
+    val timeFormatter = DateTimeFormatter.ofPattern(if (is24HourFormat) "HH:mm" else "h:mm a")
+    val accessibleTimeText = "Current time is ${currentTime.format(timeFormatter)}"
 
     Column(
         modifier = Modifier
@@ -73,14 +80,25 @@ fun ClockScreen() {
                 .clip(CircleShape)
                 .combinedClickable(
                     onClick = { },
-                    onLongClick = { showStyleSelector = true }
+                    onLongClick = { showStyleSelector = true },
+                    onLongClickLabel = "Change clock style"
                 )
+                .semantics { contentDescription = accessibleTimeText }
         ) {
             AnalogClock(currentTime, clockStyle)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
         DigitalClock(currentTime, is24HourFormat)
+        
+        // Show next alarm if available
+        nextAlarm?.let { alarmInfo ->
+            Spacer(modifier = Modifier.height(24.dp))
+            NextAlarmIndicator(
+                alarmInfo = alarmInfo,
+                is24HourFormat = is24HourFormat
+            )
+        }
     }
 
     if (showStyleSelector) {
@@ -95,6 +113,41 @@ fun ClockScreen() {
                     viewModel.updateClockStyle(it)
                     showStyleSelector = false
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun NextAlarmIndicator(
+    alarmInfo: NextAlarmInfo,
+    is24HourFormat: Boolean
+) {
+    val timeFormatter = DateTimeFormatter.ofPattern(if (is24HourFormat) "HH:mm" else "h:mm a")
+    val alarmTimeText = alarmInfo.nextTriggerTime.format(timeFormatter)
+    val label = alarmInfo.alarm.label.ifEmpty { "Alarm" }
+    
+    Surface(
+        modifier = Modifier
+            .padding(horizontal = 32.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF1C1C1E)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "⏰",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = "$label • $alarmTimeText (${alarmInfo.timeUntilAlarm})",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
             )
         }
     }

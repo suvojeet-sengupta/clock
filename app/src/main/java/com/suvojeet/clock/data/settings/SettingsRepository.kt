@@ -22,6 +22,7 @@ class SettingsRepository(private val context: Context) {
     private val DISMISS_METHOD = stringPreferencesKey("dismiss_method")
     private val MATH_DIFFICULTY = stringPreferencesKey("math_difficulty")
     private val SNOOZE_DURATION = intPreferencesKey("snooze_duration")
+    private val MAX_SNOOZE_COUNT = intPreferencesKey("max_snooze_count")
 
     val is24HourFormat: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
@@ -101,6 +102,21 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSnoozeDuration(minutes: Int) {
         context.dataStore.edit { preferences ->
             preferences[SNOOZE_DURATION] = minutes
+        }
+    }
+
+    /**
+     * Maximum number of times an alarm can be snoozed.
+     * 0 means unlimited snoozing.
+     */
+    val maxSnoozeCount: Flow<Int> = context.dataStore.data
+        .map { preferences ->
+            preferences[MAX_SNOOZE_COUNT] ?: 3 // Default to 3 snoozes
+        }
+
+    suspend fun setMaxSnoozeCount(count: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[MAX_SNOOZE_COUNT] = count
         }
     }
 

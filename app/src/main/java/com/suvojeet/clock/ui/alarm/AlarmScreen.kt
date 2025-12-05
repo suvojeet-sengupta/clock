@@ -180,14 +180,31 @@ fun AlarmItem(
                 alarm.time
             }
 
-            Text(
-                text = displayTime,
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color.White
-            )
+            Column {
+                Text(
+                    text = displayTime,
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = Color.White
+                )
+                if (alarm.label.isNotEmpty()) {
+                    Text(
+                        text = alarm.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        maxLines = 1
+                    )
+                }
+                if (alarm.daysOfWeek.isNotEmpty()) {
+                    Text(
+                        text = formatDays(alarm.daysOfWeek),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray.copy(alpha = 0.7f)
+                    )
+                }
+            }
             
             Switch(
                 checked = alarm.isEnabled,
