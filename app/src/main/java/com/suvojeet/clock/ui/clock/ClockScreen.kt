@@ -1,6 +1,7 @@
 package com.suvojeet.clock.ui.clock
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -71,7 +72,7 @@ fun ClockScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black), // Dark background
+            .background(MaterialTheme.colorScheme.background), // Use theme background
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -105,7 +106,7 @@ fun ClockScreen() {
         ModalBottomSheet(
             onDismissRequest = { showStyleSelector = false },
             sheetState = sheetState,
-            containerColor = Color(0xFF1C1C1E) // Dark gray
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             ClockStyleSelector(
                 currentStyle = clockStyle,
@@ -127,11 +128,13 @@ fun NextAlarmIndicator(
     val alarmTimeText = alarmInfo.nextTriggerTime.format(timeFormatter)
     val label = alarmInfo.alarm.label.ifEmpty { "Alarm" }
     
+
     Surface(
         modifier = Modifier
             .padding(horizontal = 32.dp),
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF1C1C1E)
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), // Glassy surface
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier
@@ -147,7 +150,7 @@ fun NextAlarmIndicator(
             Text(
                 text = "$label • $alarmTimeText (${alarmInfo.timeUntilAlarm})",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -167,7 +170,7 @@ fun ClockStyleSelector(
         Text(
             text = "Select Clock Style",
             style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
@@ -183,7 +186,7 @@ fun ClockStyleSelector(
                         .combinedClickable(onClick = { onStyleSelected(style) })
                         .padding(8.dp)
                         .background(
-                            if (currentStyle == style) Color(0xFF2C3E50) 
+                            if (currentStyle == style) MaterialTheme.colorScheme.primaryContainer 
                             else Color.Transparent,
                             RoundedCornerShape(8.dp)
                         )
@@ -194,7 +197,7 @@ fun ClockStyleSelector(
                         text = style.name,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (currentStyle == style) FontWeight.Bold else FontWeight.Normal,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -218,7 +221,7 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
             .clip(CircleShape)
             .background(
                 brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF2C3E50), Color.Black) // Dark gradient
+                    colors = listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.background) // Theme gradient
                 )
             ),
         contentAlignment = Alignment.Center
@@ -228,10 +231,10 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
             val radius = size.minDimension / 2
 
             when (style) {
-                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, Color.White, Color.Gray, Color.Red, Color.White)
-                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, Color.White, Color.Gray)
-                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, Color.Cyan, Color.Magenta, Color.Yellow)
-                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, Color.White, Color.Gray, Color.Red)
+                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, primaryColor, onSurface, tertiaryColor, onSurface)
+                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, primaryColor, secondaryColor)
+                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
+                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
             }
         }
     }
@@ -425,7 +428,7 @@ fun DigitalClock(time: LocalTime, is24HourFormat: Boolean) {
     Text(
         text = time.format(formatter).uppercase(),
         style = MaterialTheme.typography.displayLarge.copy(fontSize = 48.sp),
-        color = Color.White
+        color = MaterialTheme.colorScheme.onBackground
     )
 }
 

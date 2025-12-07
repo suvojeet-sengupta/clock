@@ -22,9 +22,19 @@ val SurfaceDark = Color(0xFF0F172A)
 val SurfaceVariantDark = Color(0xFF1E293B)
 val OnSurfaceLight = Color(0xFFF1F5F9)
 
+// Clean & Smooth Theme Colors
+val SmoothBackground = Color(0xFF101010) // Soft Matte Black
+val SmoothSurface = Color(0xFF1C1C1E) // Slightly lighter for cards
+val SmoothPrimary = Color(0xFFD0BCFF) // Pastel Lavender
+val SmoothSecondary = Color(0xFF81C784) // Soft Mint
+val SmoothTertiary = Color(0xFFE57373) // Pale Coral
+val SmoothError = Color(0xFFFFB4AB) // Soft Red
+
 // Glassmorphism Colors (Updated opacity)
 val GlassSurface = Color(0x26FFFFFF) // ~15% opacity
 val GlassBorder = Color(0x4DFFFFFF) // ~30% opacity
+val SmoothGlassSurface = Color(0x1AFFFFFF) // ~10% opacity for smoother look
+val SmoothGlassBorder = Color(0x29FFFFFF) // ~16% opacity for subtle border
 
 // Legacy/Fallback (Optional, keeping for compatibility if needed)
 val Purple80 = Color(0xFFD0BCFF)

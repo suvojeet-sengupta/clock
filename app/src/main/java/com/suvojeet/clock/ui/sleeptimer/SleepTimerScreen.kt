@@ -89,7 +89,7 @@ fun SleepTimerScreen(
     }
 
     Scaffold(
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background // Theme background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -111,7 +111,7 @@ fun SleepTimerScreen(
                     Icon(
                         Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Text(
@@ -119,7 +119,7 @@ fun SleepTimerScreen(
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.width(48.dp))
             }
@@ -189,7 +189,7 @@ private fun TimerRunningView(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF6B5B95).copy(alpha = alpha),
+                            MaterialTheme.colorScheme.primary.copy(alpha = alpha),
                             Color.Transparent
                         )
                     ),
@@ -201,7 +201,7 @@ private fun TimerRunningView(
                 Icons.Default.Bedtime,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = Color(0xFF9B8DC7)
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -214,13 +214,13 @@ private fun TimerRunningView(
                 fontSize = 72.sp,
                 fontWeight = FontWeight.Light
             ),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Text(
             text = "remaining",
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -229,7 +229,8 @@ private fun TimerRunningView(
         Card(
             modifier = Modifier.padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.6f)), // Glassy
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f))
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
@@ -238,13 +239,13 @@ private fun TimerRunningView(
                 Icon(
                     getSoundIcon(selectedSound),
                     contentDescription = null,
-                    tint = Color(0xFF9B8DC7)
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = selectedSound,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -259,8 +260,8 @@ private fun TimerRunningView(
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFD32F2F),
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError
             )
         ) {
             Icon(Icons.Default.Stop, contentDescription = null)
@@ -285,7 +286,7 @@ private fun TimerSetupView(
         Text(
             text = "Timer Duration",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(12.dp))
         
@@ -310,7 +311,7 @@ private fun TimerSetupView(
         Text(
             text = "Fade Out Duration",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -335,7 +336,7 @@ private fun TimerSetupView(
         Text(
             text = "Sound",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -364,8 +365,8 @@ private fun TimerSetupView(
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF6B5B95),
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         ) {
             Icon(Icons.Default.Bedtime, contentDescription = null)
@@ -379,7 +380,7 @@ private fun TimerSetupView(
         Text(
             text = "The sound will gradually fade as the timer ends",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
@@ -397,19 +398,20 @@ private fun DurationChip(
         modifier = Modifier
             .clickable(onClick = onClick)
             .then(
-                if (isSelected) Modifier.border(2.dp, Color(0xFF6B5B95), RoundedCornerShape(16.dp))
+                if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
                 else Modifier
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF2D2640) else Color(0xFF1C1C1E)
-        )
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.3f) else MaterialTheme.colorScheme.surface.copy(alpha=0.6f)
+        ),
+        border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f)) else null
     ) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-            color = if (isSelected) Color(0xFF9B8DC7) else Color.White
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -424,19 +426,20 @@ private fun FadeChip(
         modifier = Modifier
             .clickable(onClick = onClick)
             .then(
-                if (isSelected) Modifier.border(2.dp, Color(0xFF6B5B95), RoundedCornerShape(16.dp))
+                if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
                 else Modifier
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF2D2640) else Color(0xFF1C1C1E)
-        )
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.3f) else MaterialTheme.colorScheme.surface.copy(alpha=0.6f)
+        ),
+        border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f)) else null
     ) {
         Text(
             text = "${seconds}s",
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-            color = if (isSelected) Color(0xFF9B8DC7) else Color.White
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -452,13 +455,14 @@ private fun SoundCard(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .then(
-                if (isSelected) Modifier.border(2.dp, Color(0xFF6B5B95), RoundedCornerShape(12.dp))
+                if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                 else Modifier
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF2D2640) else Color(0xFF1C1C1E)
-        )
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.3f) else MaterialTheme.colorScheme.surface.copy(alpha=0.6f)
+        ),
+         border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f)) else null
     ) {
         Row(
             modifier = Modifier
@@ -469,21 +473,21 @@ private fun SoundCard(
             Icon(
                 getSoundIcon(soundName),
                 contentDescription = null,
-                tint = if (isSelected) Color(0xFF9B8DC7) else Color.Gray,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(28.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = soundName,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.weight(1f))
             if (isSelected) {
                 Icon(
                     Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Color(0xFF9B8DC7)
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

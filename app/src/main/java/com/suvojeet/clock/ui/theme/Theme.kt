@@ -166,6 +166,35 @@ private val MidnightColorScheme = darkColorScheme(
     onError = Color.Black
 )
 
+// Smooth Theme
+private val SmoothColorScheme = darkColorScheme(
+    primary = SmoothPrimary,
+    onPrimary = SmoothBackground,
+    primaryContainer = SmoothPrimary.copy(alpha = 0.2f),
+    onPrimaryContainer = SmoothPrimary,
+
+    secondary = SmoothSecondary,
+    onSecondary = SmoothBackground,
+    secondaryContainer = SmoothSecondary.copy(alpha = 0.2f),
+    onSecondaryContainer = SmoothSecondary,
+
+    tertiary = SmoothTertiary,
+    onTertiary = SmoothBackground,
+    tertiaryContainer = SmoothTertiary.copy(alpha = 0.2f),
+    onTertiaryContainer = SmoothTertiary,
+
+    background = SmoothBackground,
+    onBackground = StarlightWhite, // Keep text white/light
+
+    surface = SmoothSurface,
+    onSurface = StarlightWhite,
+    surfaceVariant = SmoothSurface, // Or slightly different if needed
+    onSurfaceVariant = StarlightWhite,
+
+    error = SmoothError,
+    onError = SmoothBackground
+)
+
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryExpressive,
     secondary = SecondaryExpressive,
@@ -191,13 +220,14 @@ fun getColorSchemeForTheme(theme: AppTheme): ColorScheme {
         AppTheme.FOREST -> ForestColorScheme
         AppTheme.SUNSET -> SunsetColorScheme
         AppTheme.MIDNIGHT -> MidnightColorScheme
+        AppTheme.SMOOTH -> SmoothColorScheme
     }
 }
 
 @Composable
 fun CosmicTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    appTheme: AppTheme = AppTheme.COSMIC,
+    appTheme: AppTheme = AppTheme.SMOOTH,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // Disable dynamic color to enforce Cosmic theme
     content: @Composable () -> Unit

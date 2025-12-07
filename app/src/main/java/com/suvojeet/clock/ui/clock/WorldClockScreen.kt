@@ -65,7 +65,7 @@ fun WorldClockScreen(navController: NavController) {
     val currentTime by viewModel.currentTime.collectAsState()
 
     Scaffold(
-        containerColor = Color.Black // Dark background
+        containerColor = MaterialTheme.colorScheme.background // Theme background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -86,7 +86,7 @@ fun WorldClockScreen(navController: NavController) {
                         fontSize = 64.sp,
                         fontWeight = FontWeight.Light
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -100,7 +100,7 @@ fun WorldClockScreen(navController: NavController) {
                 Text(
                     text = "World Clock",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -126,7 +126,7 @@ fun WorldClockScreen(navController: NavController) {
             Text(
                 text = "Add New Locations",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -166,7 +166,8 @@ fun AddLocationCard(
             .height(80.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)) // Dark gray
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.6f)), // Glassy
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f))
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -174,10 +175,10 @@ fun AddLocationCard(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (icon != null) {
-                    Icon(icon, contentDescription = null, tint = Color.White)
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
-                Text(text, color = Color.White, fontWeight = FontWeight.Medium)
+                Text(text, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -204,9 +205,9 @@ fun WorldClockItem(
         else -> "${data.timeDifferenceHours}h"
     }
     val timeDiffColor = when {
-        data.timeDifferenceHours == 0 -> Color.Gray
-        data.timeDifferenceHours > 0 -> Color(0xFF81C784) // Green for ahead
-        else -> Color(0xFFE57373) // Red for behind
+        data.timeDifferenceHours == 0 -> MaterialTheme.colorScheme.onSurfaceVariant
+        data.timeDifferenceHours > 0 -> MaterialTheme.colorScheme.secondary // Green/Mint
+        else -> MaterialTheme.colorScheme.tertiary // Red/Coral
     }
     
     // Handle swipe to delete
@@ -251,14 +252,14 @@ fun WorldClockItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Red)
+                    .background(MaterialTheme.colorScheme.errorContainer)
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Delete",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onErrorContainer
                 )
             }
         },
@@ -266,8 +267,9 @@ fun WorldClockItem(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)), // Dark gray
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.6f)), // Glassy
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f))
             ) {
                 Row(
                     modifier = Modifier
@@ -280,7 +282,7 @@ fun WorldClockItem(
                         Text(
                             text = data.zoneId.split("/").last().replace("_", " "),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -289,7 +291,7 @@ fun WorldClockItem(
                             Text(
                                 text = "Today, ${data.offset}HRS",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = "• $timeDiffText",
@@ -301,7 +303,7 @@ fun WorldClockItem(
                     Text(
                         text = data.time.format(formatter),
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

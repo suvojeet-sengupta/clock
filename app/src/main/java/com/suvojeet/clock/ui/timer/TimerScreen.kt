@@ -90,7 +90,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     }
 
     Scaffold(
-        containerColor = Color.Black // Dark background
+        containerColor = MaterialTheme.colorScheme.background // Dark background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -105,7 +105,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                 Text(
                     text = if (totalTime > 0) "Timer Running" else "Set Timer",
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(32.dp))
                 
@@ -119,14 +119,14 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                         label = "h",
                         readOnly = totalTime > 0
                     )
-                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant), modifier = Modifier.padding(horizontal = 8.dp))
                     TimeInput(
                         value = displayMinutes,
                         onValueChange = { if (it.length <= 2) minutesInput = it },
                         label = "m",
                         readOnly = totalTime > 0
                     )
-                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = Color.Gray), modifier = Modifier.padding(horizontal = 8.dp))
+                    Text(":", style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant), modifier = Modifier.padding(horizontal = 8.dp))
                     TimeInput(
                         value = displaySeconds,
                         onValueChange = { if (it.length <= 2) secondsInput = it },
@@ -142,7 +142,7 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                     Text(
                         text = "Quick Start",
                         style = MaterialTheme.typography.titleSmall,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     
@@ -195,8 +195,8 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                             .width(200.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2C3E50), // Dark Blue
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.primaryContainer, // Dark Blue
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     ) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = "Start timer")
@@ -218,8 +218,8 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                                 .weight(1f),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isRunning) Color(0xFFFFB74D) else Color(0xFF2C3E50),
-                                contentColor = if (isRunning) Color.Black else Color.White
+                                containerColor = if (isRunning) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Orange for pause, Dark Blue for start
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Icon(
@@ -240,10 +240,10 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
                                 .weight(1f),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1C1C1E), // Dark gray
-                                contentColor = Color(0xFFD32F2F)
+                                containerColor = MaterialTheme.colorScheme.surface, // Dark gray
+                                contentColor = MaterialTheme.colorScheme.error
                             ),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha=0.5f))
                         ) {
                             Icon(Icons.Filled.Stop, contentDescription = "Stop timer")
                             Spacer(modifier = Modifier.width(8.dp))
@@ -265,13 +265,14 @@ fun PresetChip(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        color = Color(0xFF1C1C1E),
+        color = MaterialTheme.colorScheme.surface.copy(alpha=0.6f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha=0.1f)),
         shape = RoundedCornerShape(20.dp)
     ) {
         Text(
             text = preset.label,
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
@@ -296,20 +297,20 @@ fun TimeInput(
             readOnly = readOnly,
             modifier = Modifier
                 .width(80.dp)
-                .background(Color(0xFF1C1C1E), RoundedCornerShape(8.dp)), // Dark gray
+                .background(MaterialTheme.colorScheme.surface.copy(alpha=0.3f), RoundedCornerShape(8.dp)), // Glassy
             textStyle = TextStyle(
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = if (readOnly) Color.Transparent else Color(0xFF2C3E50),
-                unfocusedContainerColor = Color(0xFF1C1C1E),
-                focusedContainerColor = Color(0xFF1C1C1E)
+                focusedBorderColor = if (readOnly) Color.Transparent else MaterialTheme.colorScheme.primary,
+                unfocusedContainerColor = Color.Transparent, // Managed by Modifier.background
+                focusedContainerColor = Color.Transparent
             ),
             shape = RoundedCornerShape(8.dp)
         )
@@ -317,7 +318,7 @@ fun TimeInput(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

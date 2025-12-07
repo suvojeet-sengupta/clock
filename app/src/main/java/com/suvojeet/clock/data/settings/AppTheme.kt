@@ -8,5 +8,6 @@ enum class AppTheme(val displayName: String, val description: String) {
     OCEAN("Ocean", "Calm blue ocean theme"),
     FOREST("Forest", "Nature-inspired green theme"),
     SUNSET("Sunset", "Warm orange and red theme"),
-    MIDNIGHT("Midnight", "Pure dark black theme")
+    MIDNIGHT("Midnight", "Pure dark black theme"),
+    SMOOTH("Smooth", "Clean, professional, and smooth design")
 }

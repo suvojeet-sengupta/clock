@@ -54,7 +54,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
     )
 
     Scaffold(
-        containerColor = Color.Black // Dark background
+        containerColor = MaterialTheme.colorScheme.background // Theme background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -77,7 +77,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                         fontWeight = FontWeight.Light
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -98,8 +98,8 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                         .weight(1f),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isRunning) Color(0xFFFFB74D) else Color(0xFF2C3E50), // Orange for pause, Dark Blue for start
-                        contentColor = if (isRunning) Color.Black else Color.White
+                        containerColor = if (isRunning) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, 
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Icon(
@@ -121,10 +121,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                             .weight(1f),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1C1C1E), // Dark gray
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.surface, // Theme surface
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Icon(Icons.Filled.Flag, contentDescription = "Lap")
                         Spacer(modifier = Modifier.width(8.dp))
@@ -141,10 +141,10 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                             .weight(1f),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1C1C1E), // Dark gray
-                            contentColor = Color(0xFFD32F2F) // Red text for reset
+                            containerColor = MaterialTheme.colorScheme.surface, 
+                            contentColor = MaterialTheme.colorScheme.error 
                         ),
-                         border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Reset")
                         Spacer(modifier = Modifier.width(8.dp))
@@ -165,7 +165,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                     Text(
                         text = "Laps",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     IconButton(
                         onClick = { 
@@ -177,7 +177,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                         Icon(
                             Icons.Filled.Share, 
                             contentDescription = "Share lap times",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -192,9 +192,9 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)), // Dark gray
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.6f)), // Glassy
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent)
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha=0.05f))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -206,7 +206,7 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                                 Text(
                                     text = "Lap ${laps.size - index}",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.Gray
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
@@ -215,14 +215,14 @@ fun StopwatchScreen(viewModel: StopwatchViewModel = hiltViewModel()) {
                                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = Color.White
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
                                         text = "+${formatTime(lapData.splitTime)}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                                         ),
-                                        color = Color(0xFF81C784) // Green for split time
+                                        color = MaterialTheme.colorScheme.secondary // Secondary/Green for split time
                                     )
                                 }
                             }

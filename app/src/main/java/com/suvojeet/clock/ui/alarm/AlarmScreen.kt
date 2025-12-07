@@ -56,7 +56,7 @@ fun AlarmScreen() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
-        containerColor = Color.Black // Dark background
+        containerColor = MaterialTheme.colorScheme.background // Theme background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -77,7 +77,7 @@ fun AlarmScreen() {
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -87,7 +87,7 @@ fun AlarmScreen() {
                         Text(
                             text = "No alarms set",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
@@ -128,8 +128,8 @@ fun AlarmScreen() {
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2C3E50), // Dark blue/gray
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 Text(
@@ -174,8 +174,10 @@ fun AlarmItem(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1C1C1E) // Dark gray card
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f) // Glassy
         ),
+        
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -198,13 +200,13 @@ fun AlarmItem(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (alarm.label.isNotEmpty()) {
                     Text(
                         text = alarm.label,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
                 }
@@ -212,7 +214,7 @@ fun AlarmItem(
                     Text(
                         text = formatDays(alarm.daysOfWeek),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -223,8 +225,8 @@ fun AlarmItem(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.Gray,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                     uncheckedBorderColor = Color.Transparent
                 )
             )
