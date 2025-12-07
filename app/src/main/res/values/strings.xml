@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Clock</string>
+    <string name="alarm_default_label">Alarm</string>
+    <string name="snooze_button">Snooze (%1$d m)</string>
+    <string name="dismiss_button">Dismiss</string>
+    <string name="snooze_limit_reached">Snooze Limit Reached</string>
+    <string name="snooze_success">Snoozed for %1$d minutes</string>
+    <string name="solve_to_dismiss">Solve to Dismiss</string>
+    <string name="answer_label">Answer</string>
+    <string name="incorrect_answer">Incorrect answer</string>
+    <string name="submit_button">Submit</string>
+    <string name="back_button">Back</string>
+    <string name="shake_to_dismiss">Shake to Dismiss</string>
+    <string name="shake_instruction">Shake your phone!</string>
+    <string name="shake_progress">%1$d / %2$d</string>
 </resources>

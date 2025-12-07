@@ -32,6 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import com.suvojeet.clock.R
+
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,47 +57,64 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.lifecycle.lifecycleScope
 
+import androidx.activity.viewModels
+
 @AndroidEntryPoint
 class AlarmActivity : ComponentActivity() {
+    
+    // Injecting ViewModel
+    private val viewModel: AlarmViewModel by viewModels()
+
     @Inject
     lateinit var settingsRepository: com.suvojeet.clock.data.settings.SettingsRepository
-
-    private var mediaPlayer: android.media.MediaPlayer? = null
-    private var vibrator: Vibrator? = null
-    private var volumeJob: kotlinx.coroutines.Job? = null
-    
-    companion object {
-        private const val NOTIFICATION_ID = 1
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         turnScreenOnAndKeyguard()
         
+        val label = intent.getStringExtra("EXTRA_MESSAGE") ?: getString(R.string.alarm_default_label)
+        val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
+        val vibratorEnabled = intent.getBooleanExtra("EXTRA_VIBRATE", true)
+        val initialSnoozeCount = intent.getIntExtra("EXTRA_SNOOZE_COUNT", 0)
+        
+        // Initialize logic in ViewModel
+        viewModel.initializeAlarm(label, soundUri, vibratorEnabled, initialSnoozeCount)
+
         lifecycleScope.launch {
-            val gradualVolume = settingsRepository.gradualVolume.first()
             val dismissMethod = settingsRepository.dismissMethod.first()
             val mathDifficulty = settingsRepository.mathDifficulty.first()
             val snoozeDuration = settingsRepository.snoozeDuration.first()
             
-            startRinging(gradualVolume)
-
-            val label = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
-            val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
-
             setContent {
                 CosmicTheme {
+                    val uiState by viewModel.uiState.collectAsState()
+                    
                     AlarmTriggerScreen(
-                        label = label,
+                        label = uiState.label,
+                        currentTime = uiState.currentTime,
                         dismissMethod = dismissMethod,
                         mathDifficulty = mathDifficulty,
                         snoozeDurationMinutes = snoozeDuration,
+                        canSnooze = uiState.canSnooze,
                         onDismiss = {
-                            dismissAlarm()
+                            viewModel.stopAlarm()
+                            cancelNotification()
+                            finish()
                         },
                         onSnooze = {
-                            snoozeAlarm(label, soundUri, snoozeDuration)
+                            viewModel.snooze()
+                            // Note: uiState.snoozeCount is already updated by viewModel.snooze() in the VM
+                            // But we are in a lambda capturing uiState? No, uiState is observed outside.
+                            // Wait, if I call snooze(), the state updates asynchronously. 
+                            // The uiState variable inside the lambda might be stale if captured.
+                            // Actually, I should pass the current count + 1 or trust that I can get it.
+                            // Better: let ViewModel handle the snoozing entirely? No, AlarmManager needs Activity context.
+                            // I will simply pass `uiState.snoozeCount + 1` or just rely on the fact that if I snoozed, count is old + 1.
+                            // Let's pass `uiState.snoozeCount + 1` explicitly as the new count to persist.
+                            // OR, just read uiState.snoozeCount since it will be updated? No, recomposition takes time.
+                            // Safest: uiState.snoozeCount + 1 (since we just verified canSnooze).
+                            snoozeAlarm(label, soundUri, snoozeDuration, uiState.snoozeCount + 1)
                         }
                     )
                 }
@@ -119,101 +139,19 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
-    private fun startRinging(gradualVolume: Boolean) {
-        val soundUriString = intent.getStringExtra("EXTRA_SOUND_URI")
-        val uri = if (!soundUriString.isNullOrEmpty()) {
-            android.net.Uri.parse(soundUriString)
-        } else {
-            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        }
-        
-        try {
-            mediaPlayer = android.media.MediaPlayer().apply {
-                setDataSource(applicationContext, uri)
-                setAudioAttributes(
-                    android.media.AudioAttributes.Builder()
-                        .setUsage(android.media.AudioAttributes.USAGE_ALARM)
-                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-                isLooping = true
-                prepare()
-            }
-
-            if (gradualVolume) {
-                mediaPlayer?.setVolume(0.1f, 0.1f)
-                mediaPlayer?.start()
-                startGradualVolumeIncrease()
-            } else {
-                mediaPlayer?.setVolume(1.0f, 1.0f)
-                mediaPlayer?.start()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            val ringtone = RingtoneManager.getRingtone(this, uri)
-            ringtone?.play()
-        }
-
-        if (intent.getBooleanExtra("EXTRA_VIBRATE", true)) {
-            vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-
-            val pattern = longArrayOf(0, 1000, 1000)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(pattern, 0)
-            }
-        }
-    }
-
-    private fun startGradualVolumeIncrease() {
-        volumeJob = lifecycleScope.launch {
-            for (i in 1..10) {
-                kotlinx.coroutines.delay(3000)
-                val volume = 0.1f + (i * 0.09f)
-                mediaPlayer?.setVolume(volume, volume)
-            }
-        }
-    }
-
-    private fun stopRinging() {
-        volumeJob?.cancel()
-        try {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        mediaPlayer = null
-        vibrator?.cancel()
-    }
-
     private fun cancelNotification() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(NOTIFICATION_ID)
+        notificationManager.cancel(1) // NOTIFICATION_ID
     }
 
-    private fun dismissAlarm() {
-        stopRinging()
-        cancelNotification()
-        finish()
-    }
-
-    private fun snoozeAlarm(label: String, soundUri: String?, snoozeDurationMinutes: Int) {
-        stopRinging()
+    private fun snoozeAlarm(label: String, soundUri: String?, snoozeDurationMinutes: Int, snoozeCount: Int) {
         cancelNotification()
 
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlarmReceiver::class.java).apply {
             putExtra("EXTRA_MESSAGE", label)
             putExtra("EXTRA_SOUND_URI", soundUri)
+            putExtra("EXTRA_SNOOZE_COUNT", snoozeCount)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             this,
@@ -230,32 +168,21 @@ class AlarmActivity : ComponentActivity() {
         Toast.makeText(this, "Snoozed for $snoozeDurationMinutes minutes", Toast.LENGTH_SHORT).show()
         finish()
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopRinging()
-    }
 }
 
 @Composable
 fun AlarmTriggerScreen(
     label: String,
+    currentTime: LocalTime,
     dismissMethod: DismissMethod,
     mathDifficulty: MathDifficulty,
     snoozeDurationMinutes: Int,
+    canSnooze: Boolean,
     onDismiss: () -> Unit,
     onSnooze: () -> Unit
 ) {
-    var currentTime by remember { mutableStateOf(LocalTime.now()) }
     var showMathDialog by remember { mutableStateOf(false) }
     var showShakeScreen by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        while(true) {
-            currentTime = LocalTime.now()
-            kotlinx.coroutines.delay(1000)
-        }
-    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "Pulsing")
     val pulseScale by infiniteTransition.animateFloat(
@@ -270,14 +197,7 @@ fun AlarmTriggerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceContainer
-                    )
-                )
-            ),
+            .background(MaterialTheme.colorScheme.background), // Theme background
         contentAlignment = Alignment.Center
     ) {
         // Background pulsing circle
@@ -286,7 +206,7 @@ fun AlarmTriggerScreen(
                 .size(250.dp)
                 .scale(pulseScale)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Theme primary
         )
 
         Column(
@@ -326,20 +246,37 @@ fun AlarmTriggerScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = onSnooze,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                ) {
-                    Icon(Icons.Default.Snooze, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Snooze (${snoozeDurationMinutes}m)", style = MaterialTheme.typography.titleMedium)
+                if (canSnooze) {
+                    Button(
+                        onClick = onSnooze,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Icon(Icons.Default.Snooze, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.snooze_button, snoozeDurationMinutes), style = MaterialTheme.typography.titleMedium)
+                    }
+                } else {
+                     Button(
+                        onClick = { /* Do nothing */ },
+                        enabled = false,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(stringResource(R.string.snooze_limit_reached), style = MaterialTheme.typography.titleMedium)
+                    }
                 }
 
                 Button(
@@ -361,7 +298,7 @@ fun AlarmTriggerScreen(
                 ) {
                     Icon(Icons.Default.AlarmOff, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Dismiss", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.dismiss_button), style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -383,6 +320,10 @@ fun AlarmTriggerScreen(
     }
 }
 
+// ... MathChallengeDialog and ShakeChallengeScreen same as before ... 
+// (Wait, I need to include them or they get deleted because I'm replacing until line 550)
+// I will include them to be safe.
+
 @Composable
 fun MathChallengeDialog(
     difficulty: MathDifficulty,
@@ -396,7 +337,7 @@ fun MathChallengeDialog(
 
     AlertDialog(
         onDismissRequest = { /* Prevent dismiss */ },
-        title = { Text("Solve to Dismiss") },
+        title = { Text(stringResource(R.string.solve_to_dismiss)) },
         text = {
             Column {
                 Text(
@@ -410,13 +351,13 @@ fun MathChallengeDialog(
                         answer = it
                         error = false
                     },
-                    label = { Text("Answer") },
+                    label = { Text(stringResource(R.string.answer_label)) },
                     isError = error,
                     singleLine = true
                 )
                 if (error) {
                     Text(
-                        text = "Incorrect answer",
+                        text = stringResource(R.string.incorrect_answer),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -434,12 +375,12 @@ fun MathChallengeDialog(
                     }
                 }
             ) {
-                Text("Submit")
+                Text(stringResource(R.string.submit_button))
             }
         },
         dismissButton = {
             TextButton(onClick = onCancel) {
-                Text("Back")
+                Text(stringResource(R.string.back_button))
             }
         }
     )
@@ -528,16 +469,16 @@ fun ShakeChallengeScreen(
 
     AlertDialog(
         onDismissRequest = { /* Prevent dismiss */ },
-        title = { Text("Shake to Dismiss") },
+        title = { Text(stringResource(R.string.shake_to_dismiss)) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Shake your phone!")
+                Text(stringResource(R.string.shake_instruction))
                 Spacer(modifier = Modifier.height(16.dp))
                 LinearProgressIndicator(
                     progress = { shakeCount / targetShakes.toFloat() },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("${shakeCount} / $targetShakes")
+                Text(stringResource(R.string.shake_progress, shakeCount, targetShakes))
             }
         },
         confirmButton = {},

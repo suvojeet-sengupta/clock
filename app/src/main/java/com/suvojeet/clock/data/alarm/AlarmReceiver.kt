@@ -23,6 +23,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val message = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"
             val soundUri = intent.getStringExtra("EXTRA_SOUND_URI")
             val isVibrateEnabled = intent.getBooleanExtra("EXTRA_VIBRATE", true)
+            val snoozeCount = intent.getIntExtra("EXTRA_SNOOZE_COUNT", 0)
             val channelId = "alarm_channel_high_priority"
             
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -50,6 +51,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 putExtra("EXTRA_MESSAGE", message)
                 putExtra("EXTRA_SOUND_URI", soundUri)
                 putExtra("EXTRA_VIBRATE", isVibrateEnabled)
+                putExtra("EXTRA_SNOOZE_COUNT", snoozeCount)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
             }
             val fullScreenPendingIntent = android.app.PendingIntent.getActivity(

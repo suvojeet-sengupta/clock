@@ -167,9 +167,15 @@ class SleepTimerService : Service() {
                 _remainingTime.value = _remainingTime.value - 1000
 
                 // Start fading volume when remaining time <= fadeDuration
-                if (_remainingTime.value <= fadeDuration) {
-                    val fadeProgress = (_remainingTime.value.toFloat() / fadeDuration) * 0.5f // Max 0.5 volume
-                    mediaPlayer?.setVolume(fadeProgress, fadeProgress)
+                if (_remainingTime.value <= fadeDuration && fadeDuration > 0) {
+                     // Calculate fade progress (1.0 -> 0.0) based on remaining time
+                    val fadeProgress = (_remainingTime.value.toFloat() / fadeDuration).coerceIn(0f, 1f)
+                    val volume = fadeProgress * 0.5f // Max volume is 0.5f
+                    try {
+                        mediaPlayer?.setVolume(volume, volume)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
 
                 // Update notification every 30 seconds
