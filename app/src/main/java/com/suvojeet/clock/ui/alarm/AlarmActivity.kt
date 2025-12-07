@@ -63,7 +63,7 @@ import androidx.activity.viewModels
 class AlarmActivity : ComponentActivity() {
     
     // Injecting ViewModel
-    private val viewModel: AlarmViewModel by viewModels()
+    private val viewModel: AlarmTriggerViewModel by viewModels()
 
     @Inject
     lateinit var settingsRepository: com.suvojeet.clock.data.settings.SettingsRepository
