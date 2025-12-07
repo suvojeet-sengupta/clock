@@ -8,16 +8,49 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.suvojeet.clock.R
-
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var repository: AlarmRepository
+
+    @Inject
+    lateinit var scheduler: AlarmScheduler
+
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
         val wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "Clock:AlarmWakeLock")
         wakeLock.acquire(10 * 1000L) // Acquire for 10 seconds
+
+        // Handle Rescheduling or Disabling
+        val alarmId = intent.getIntExtra("EXTRA_ALARM_ID", -1)
+        if (alarmId != -1) {
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val alarm = repository.getAlarmById(alarmId)
+                    if (alarm != null) {
+                        if (alarm.daysOfWeek.isNotEmpty()) {
+                            // Schedule next occurrence
+                            scheduler.schedule(alarm)
+                        } else {
+                            // Disable one-time alarm
+                            repository.update(alarm.copy(isEnabled = false))
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+        }
 
         try {
             val message = intent.getStringExtra("EXTRA_MESSAGE") ?: "Alarm"

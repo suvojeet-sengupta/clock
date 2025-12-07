@@ -1,12 +1,10 @@
 package com.suvojeet.clock.ui.alarm
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.suvojeet.clock.data.alarm.AlarmEntity
 import com.suvojeet.clock.data.alarm.AlarmRepository
 import com.suvojeet.clock.data.alarm.AlarmScheduler
-import com.suvojeet.clock.data.alarm.AndroidAlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,27 +12,37 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.suvojeet.clock.ui.alarm.AlarmUiModel
+import com.suvojeet.clock.util.TimeFormatter
+import kotlinx.coroutines.flow.map
+
 @HiltViewModel
 class AlarmViewModel @Inject constructor(
     private val repository: AlarmRepository,
-    private val application: Application
+    private val scheduler: AlarmScheduler
 ) : ViewModel() {
 
-    private val alarmScheduler: AlarmScheduler = AndroidAlarmScheduler(application)
-
-    val allAlarms: StateFlow<List<AlarmEntity>> = repository.allAlarms
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val allAlarms: StateFlow<List<AlarmUiModel>> = repository.allAlarms
+        .map { alarms ->
+            alarms.map { alarm ->
+                AlarmUiModel(
+                    id = alarm.id,
+                    timeDisplay = TimeFormatter.formatTimeForUi(TimeFormatter.parseDbTime(alarm.time)),
+                    label = alarm.label,
+                    isEnabled = alarm.isEnabled,
+                    daysDisplay = TimeFormatter.formatDaysOfWeek(alarm.daysOfWeek),
+                    originalEntity = alarm
+                )
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addAlarm(alarm: AlarmEntity) {
         viewModelScope.launch {
             val id = repository.insert(alarm)
             val newAlarm = alarm.copy(id = id.toInt())
-            if (newAlarm.isEnabled) {
-                alarmScheduler.schedule(newAlarm)
+            if (newAlarm.isEnabled) { // Schedule only if enabled
+                scheduler.schedule(newAlarm)
             }
         }
     }
@@ -43,9 +51,9 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             repository.update(alarm)
             if (alarm.isEnabled) {
-                alarmScheduler.schedule(alarm)
+                scheduler.schedule(alarm)
             } else {
-                alarmScheduler.cancel(alarm)
+                scheduler.cancel(alarm)
             }
         }
     }
@@ -53,7 +61,7 @@ class AlarmViewModel @Inject constructor(
     fun deleteAlarm(alarm: AlarmEntity) {
         viewModelScope.launch {
             repository.delete(alarm)
-            alarmScheduler.cancel(alarm)
+            scheduler.cancel(alarm)
         }
     }
 

@@ -6,12 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import java.time.LocalTime
+import com.suvojeet.clock.util.TimeFormatter
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
 
 interface AlarmScheduler {
     fun schedule(alarm: AlarmEntity)
@@ -29,6 +26,7 @@ class AndroidAlarmScheduler(
             putExtra("EXTRA_MESSAGE", alarm.label.ifEmpty { "Alarm" })
             putExtra("EXTRA_SOUND_URI", alarm.soundUri)
             putExtra("EXTRA_VIBRATE", alarm.isVibrateEnabled)
+            putExtra("EXTRA_ALARM_ID", alarm.id)
         }
         
         val pendingIntent = PendingIntent.getBroadcast(
@@ -38,26 +36,46 @@ class AndroidAlarmScheduler(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val time = try {
-            LocalTime.parse(alarm.time)
-        } catch (e: Exception) {
-            try {
-                LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
-            } catch (e2: Exception) {
-                LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.US))
+        val time = TimeFormatter.parseDbTime(alarm.time)
+        val now = ZonedDateTime.now(ZoneId.systemDefault())
+        var alarmTime = now.with(time).withSecond(0).withNano(0)
+
+        if (alarm.daysOfWeek.isEmpty()) {
+            // One-time alarm
+            if (alarmTime.isBefore(now)) {
+                alarmTime = alarmTime.plusDays(1)
+            }
+        } else {
+            // Recurring alarm
+            // daysOfWeek contains 1=Mon, ..., 7=Sun
+            // ZonedDateTime.dayOfWeek returns DayOfWeek enum (MONDAY=1, SUNDAY=7)
+            val currentDayOfWeek = now.dayOfWeek.value // 1..7
+
+            // If today is in the list AND time is in future, schedule for today
+            if (alarm.daysOfWeek.contains(currentDayOfWeek) && alarmTime.isAfter(now)) {
+                 // alarmTime is already set to today/time, and it's in future. Keep it.
+            } else {
+                 // Find next day
+                 var daysUntilNext = -1
+                 for (i in 1..7) {
+                     // Calculate next day index (1-7)
+                     // (current + i - 1) % 7 + 1 handles the wrapping correctly
+                     // e.g., current=7 (Sun), i=1 => (7+1-1)%7 + 1 = 0 + 1 = 1 (Mon)
+                     val checkDay = (currentDayOfWeek + i - 1) % 7 + 1
+                     if (alarm.daysOfWeek.contains(checkDay)) {
+                         daysUntilNext = i
+                         break
+                     }
+                 }
+                 
+                 if (daysUntilNext != -1) {
+                     alarmTime = now.plusDays(daysUntilNext.toLong()).with(time).withSecond(0).withNano(0)
+                 } else {
+                     // Fallback just in case
+                     if (alarmTime.isBefore(now)) alarmTime = alarmTime.plusDays(1)
+                 }
             }
         }
-        
-        val now = ZonedDateTime.now(ZoneId.systemDefault())
-        var alarmTime = now.with(time)
-
-        if (alarmTime.isBefore(now)) {
-            alarmTime = alarmTime.plusDays(1)
-        }
-
-        // Handle days of week if needed, for now simple daily or one-time
-        // If daysOfWeek is not empty, we need more complex logic to find next occurrence
-        // For MVP/Expressive update, let's stick to simple scheduling
         
         Log.d("AlarmScheduler", "Scheduling alarm for ${alarmTime.toLocalDateTime()}")
 
@@ -69,8 +87,7 @@ class AndroidAlarmScheduler(
                     pendingIntent
                 )
             } else {
-                // Request permission or fallback
-                Log.w("AlarmScheduler", "Cannot schedule exact alarm")
+                Log.w("AlarmScheduler", "Cannot schedule exact alarm, falling back to inexact")
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     alarmTime.toEpochSecond() * 1000,

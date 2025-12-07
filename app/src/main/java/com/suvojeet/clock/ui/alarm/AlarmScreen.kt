@@ -34,6 +34,7 @@ import com.suvojeet.clock.data.alarm.AlarmEntity
 import com.suvojeet.clock.data.alarm.AlarmRepository
 import com.suvojeet.clock.ui.theme.*
 import com.suvojeet.clock.util.HapticFeedback
+import com.suvojeet.clock.util.TimeFormatter
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -42,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,8 +54,50 @@ fun AlarmScreen() {
     val alarms by viewModel.allAlarms.collectAsState()
     
     var showBottomSheet by remember { mutableStateOf(false) }
-    var selectedAlarm by remember { mutableStateOf<AlarmEntity?>(null) }
+    var selectedAlarm by remember { mutableStateOf<AlarmUiModel?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val context = LocalContext.current
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Check for Exact Alarm permission on Android 12+ (API 31+)
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    val alarmManager = context.getSystemService(android.app.AlarmManager::class.java)
+                    if (!alarmManager.canScheduleExactAlarms()) {
+                        showPermissionDialog = true
+                    } else {
+                        showPermissionDialog = false
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = { Text("Permission Required") },
+            text = { Text("To ensure your alarms ring precisely on time, please allow 'Alarms & Reminders' permission for this app.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPermissionDialog = false
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                        context.startActivity(intent)
+                    }
+                }) { Text("Settings") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background // Theme background
@@ -101,7 +145,7 @@ fun AlarmScreen() {
                                 alarm = alarm,
                                 onToggle = { 
                                     HapticFeedback.performToggle(view)
-                                    viewModel.toggleAlarm(alarm) 
+                                    viewModel.toggleAlarm(alarm.originalEntity) 
                                 },
                                 onClick = {
                                     HapticFeedback.performClick(view)
@@ -141,7 +185,7 @@ fun AlarmScreen() {
 
         if (showBottomSheet) {
             AlarmBottomSheet(
-                alarm = selectedAlarm,
+                alarm = selectedAlarm?.originalEntity,
                 onDismiss = { showBottomSheet = false },
                 onSave = { alarm ->
                     HapticFeedback.performConfirm(view)
@@ -164,7 +208,7 @@ fun AlarmScreen() {
 
 @Composable
 fun AlarmItem(
-    alarm: AlarmEntity,
+    alarm: AlarmUiModel,
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit
 ) {
@@ -187,15 +231,9 @@ fun AlarmItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val displayTime = try {
-                LocalTime.parse(alarm.time).format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
-            } catch (e: Exception) {
-                alarm.time
-            }
-
             Column {
                 Text(
-                    text = displayTime,
+                    text = alarm.timeDisplay,
                     style = MaterialTheme.typography.displaySmall.copy(
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium
@@ -210,13 +248,11 @@ fun AlarmItem(
                         maxLines = 1
                     )
                 }
-                if (alarm.daysOfWeek.isNotEmpty()) {
-                    Text(
-                        text = formatDays(alarm.daysOfWeek),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                }
+                Text(
+                    text = alarm.daysDisplay,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
             }
             
             Switch(
@@ -244,11 +280,7 @@ fun AlarmBottomSheet(
     sheetState: SheetState
 ) {
     val initialTime = if (alarm != null) {
-        try {
-            LocalTime.parse(alarm.time)
-        } catch (e: Exception) {
-            LocalTime.parse(alarm.time, DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
-        }
+        TimeFormatter.parseDbTime(alarm.time)
     } else {
         LocalTime.now()
     }
@@ -493,11 +525,11 @@ fun AlarmBottomSheet(
                 Button(
                     onClick = {
                         val time = LocalTime.of(timePickerState.hour, timePickerState.minute)
-                        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                        // Use TimeFormatter for consistent DB format
                         onSave(
                             AlarmEntity(
                                 id = alarm?.id ?: 0,
-                                time = time.format(formatter),
+                                time = TimeFormatter.formatTimeForDb(time),
                                 label = label,
                                 isVibrateEnabled = isVibrateEnabled,
                                 daysOfWeek = selectedDays,
@@ -521,10 +553,6 @@ fun DaySelector(
     onQuickSelect: (List<Int>) -> Unit = {}
 ) {
     val days = listOf("S", "M", "T", "W", "T", "F", "S")
-    // 1 = Monday, 7 = Sunday in java.time.DayOfWeek, but let's map 1..7 to Mon..Sun
-    // Or just use 0..6 indices. Let's assume 1=Mon, 7=Sun for simplicity in storage
-    // But UI shows S M T W T F S (Sun Mon Tue...)
-    // Let's map: Sun=7, Mon=1, Tue=2, ... Sat=6.
     val dayValues = listOf(7, 1, 2, 3, 4, 5, 6)
     
     val weekdays = listOf(1, 2, 3, 4, 5) // Mon-Fri
@@ -612,17 +640,4 @@ fun DaySelector(
             }
         }
     }
-}
-
-fun formatDays(days: List<Int>): String {
-    if (days.size == 7) return "Every day"
-    if (days.isEmpty()) return "Never"
-    // Sort: Mon(1)..Sun(7). But we might want Sun first?
-    // Let's just sort numerically 1..7
-    val sortedDays = days.sorted()
-    // Map to short names
-    val dayNames = mapOf(
-        1 to "Mon", 2 to "Tue", 3 to "Wed", 4 to "Thu", 5 to "Fri", 6 to "Sat", 7 to "Sun"
-    )
-    return sortedDays.joinToString(", ") { dayNames[it] ?: "" }
 }

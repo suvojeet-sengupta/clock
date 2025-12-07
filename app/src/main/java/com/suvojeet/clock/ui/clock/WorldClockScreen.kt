@@ -248,19 +248,23 @@ fun WorldClockItem(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
+            val color = MaterialTheme.colorScheme.errorContainer.copy(alpha = dismissState.progress)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .background(color)
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onErrorContainer
-                )
+                // Only show icon if progress is significant to avoid ghosting
+                if (dismissState.progress > 0.1f) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = dismissState.progress)
+                    )
+                }
             }
         },
         content = {
