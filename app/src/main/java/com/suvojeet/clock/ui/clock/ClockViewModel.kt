@@ -204,7 +204,7 @@ class ClockViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 _currentTime.value = LocalTime.now()
-                delay(100) // Update every 100ms for smooth second hand
+                delay(1000) // Update every 1 second
             }
         }
     }

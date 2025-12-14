@@ -215,6 +215,10 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
     val background = MaterialTheme.colorScheme.background
     val onSurface = MaterialTheme.colorScheme.onSurface
 
+    // Calculate second hand angle with smooth animation
+    val currentSecond = LocalTime.now().second
+    val animatedSecondAngle by animateFloatAsState(targetValue = currentSecond * 6f, label = "second_hand_animation")
+
     Box(
         modifier = Modifier
             .size(250.dp)
@@ -231,10 +235,10 @@ fun AnalogClock(time: LocalTime, style: ClockStyle) {
             val radius = size.minDimension / 2
 
             when (style) {
-                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, primaryColor, onSurface, tertiaryColor, onSurface)
-                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, primaryColor, secondaryColor)
-                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
-                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor)
+                ClockStyle.CLASSIC -> DrawClassicClock(this, center, radius, time, primaryColor, onSurface, tertiaryColor, onSurface, animatedSecondAngle)
+                ClockStyle.MINIMAL -> DrawMinimalClock(this, center, radius, time, primaryColor, secondaryColor, animatedSecondAngle)
+                ClockStyle.NEON -> DrawNeonClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor, animatedSecondAngle)
+                ClockStyle.DOT -> DrawDotClock(this, center, radius, time, primaryColor, secondaryColor, tertiaryColor, animatedSecondAngle)
             }
         }
     }
@@ -248,7 +252,8 @@ fun DrawClassicClock(
     primary: Color,
     secondary: Color,
     tertiary: Color,
-    onSurface: Color
+    onSurface: Color,
+    animatedSecondAngle: Float // New parameter
 ) {
     with(scope) {
         // Ticks
@@ -272,7 +277,7 @@ fun DrawClassicClock(
         }
 
         // Hands
-        drawHands(this, center, radius, time, primary, secondary, tertiary, true)
+        drawHands(this, center, radius, time, primary, secondary, tertiary, true, animatedSecondAngle)
     }
 }
 
@@ -282,7 +287,8 @@ fun DrawMinimalClock(
     radius: Float,
     time: LocalTime,
     primary: Color,
-    secondary: Color
+    secondary: Color,
+    animatedSecondAngle: Float // New parameter
 ) {
     with(scope) {
         // Only 12, 3, 6, 9 ticks
@@ -319,7 +325,8 @@ fun DrawNeonClock(
     time: LocalTime,
     primary: Color,
     secondary: Color,
-    tertiary: Color
+    tertiary: Color,
+    animatedSecondAngle: Float // New parameter
 ) {
     with(scope) {
         // Outer ring
@@ -336,8 +343,7 @@ fun DrawNeonClock(
             drawLine(secondary.copy(alpha = 0.5f), center, center - Offset(0f, radius * 0.7f), 12.dp.toPx(), StrokeCap.Round)
             drawLine(secondary, center, center - Offset(0f, radius * 0.7f), 6.dp.toPx(), StrokeCap.Round)
         }
-        val secondAngle = time.second * 6f
-        rotate(secondAngle) {
+        rotate(animatedSecondAngle) { // Use animated angle here
             drawLine(tertiary, center, center - Offset(0f, radius * 0.85f), 4.dp.toPx(), StrokeCap.Round)
         }
     }
@@ -350,7 +356,8 @@ fun DrawDotClock(
     time: LocalTime,
     primary: Color,
     secondary: Color,
-    tertiary: Color
+    tertiary: Color,
+    animatedSecondAngle: Float // New parameter
 ) {
     with(scope) {
         // Dots for hours
@@ -378,12 +385,13 @@ fun DrawDotClock(
         )
         drawCircle(secondary, 10.dp.toPx(), minutePos)
 
-        val secondAngle = time.second * 6f
-        val secondPos = center + Offset(
-            x = (radius * 0.85f) * cos(Math.toRadians(secondAngle.toDouble() - 90)).toFloat(),
-            y = (radius * 0.85f) * sin(Math.toRadians(secondAngle.toDouble() - 90)).toFloat()
-        )
-        drawCircle(tertiary, 8.dp.toPx(), secondPos)
+        rotate(animatedSecondAngle) { // Use animated angle here
+            val secondPos = center + Offset(
+                x = (radius * 0.85f) * cos(Math.toRadians(animatedSecondAngle.toDouble() - 90)).toFloat(),
+                y = (radius * 0.85f) * sin(Math.toRadians(animatedSecondAngle.toDouble() - 90)).toFloat()
+            )
+            drawCircle(tertiary, 8.dp.toPx(), secondPos)
+        }
     }
 }
 
@@ -395,7 +403,8 @@ fun drawHands(
     primary: Color,
     secondary: Color,
     tertiary: Color,
-    drawSecondHand: Boolean
+    drawSecondHand: Boolean,
+    animatedSecondAngle: Float // New parameter for animated second angle
 ) {
     with(scope) {
         // Hour Hand
@@ -412,8 +421,7 @@ fun drawHands(
 
         // Second Hand
         if (drawSecondHand) {
-            val secondAngle = time.second * 6f
-            rotate(secondAngle) {
+            rotate(animatedSecondAngle) { // Use animated angle here
                 drawLine(tertiary, center, center - Offset(0f, radius * 0.85f), 3.dp.toPx(), StrokeCap.Round)
             }
             drawCircle(tertiary, 8.dp.toPx(), center)

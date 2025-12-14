@@ -9,6 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessAlarm
 import androidx.compose.material.icons.filled.HourglassEmpty
@@ -35,6 +40,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -63,6 +71,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.foundation.layout.Row
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -80,8 +92,10 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var requestContext: com.amazon.identity.auth.device.api.workflow.RequestContext
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         
         requestContext = com.amazon.identity.auth.device.api.workflow.RequestContext.create(this)
         requestContext.registerListener(object : com.amazon.identity.auth.device.api.authorization.AuthorizeListener() {
@@ -103,8 +117,11 @@ class MainActivity : ComponentActivity() {
         })
 
         handleSetAlarmIntent(intent)
+        checkPermissions() // Call checkPermissions here
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+            
             val appTheme by settingsRepository.appTheme
                 .map { it }
                 .collectAsState(initial = AppTheme.COSMIC)
@@ -116,6 +133,7 @@ class MainActivity : ComponentActivity() {
                 // Show loading or nothing while checking onboarding status
                 if (onboardingCompleted != null) {
                     MainScreen(
+                        windowSizeClass = windowSizeClass,
                         showSetup = onboardingCompleted == false,
                         onSetupComplete = {
                             lifecycleScope.launch {
@@ -142,6 +160,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         requestContext.onResume()
+        checkPermissions() // Call checkPermissions here
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -239,9 +258,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun MainScreen(
+    windowSizeClass: WindowSizeClass, // New parameter
     showSetup: Boolean,
     onSetupComplete: () -> Unit,
     onLinkAlexaClick: () -> Unit
@@ -257,13 +279,26 @@ fun MainScreen(
             }
         }
     }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    val items = listOf(
+        Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
+        Triple(Screen.WorldClock, Icons.Filled.Public, "World"),
+        Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
+        Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
+        Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
+    )
+
+    val isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
     
+    // Hide BottomBar/NavigationRail on Settings screen
+    val isSettings = currentDestination?.hasRoute<Screen.Settings>() == true
+
     Scaffold(
+        contentWindowInsets = WindowInsets.Companion.safeDrawing,
         topBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-            
-            // Show TopAppBar only on main screens, not on Settings (Settings has its own)
             val isMainScreen = currentDestination?.hierarchy?.any { 
                 it.hasRoute<Screen.Clock>() || it.hasRoute<Screen.WorldClock>() || it.hasRoute<Screen.Alarm>() || 
                 it.hasRoute<Screen.Timer>() || it.hasRoute<Screen.Stopwatch>()
@@ -306,26 +341,12 @@ fun MainScreen(
             }
         },
         bottomBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-            
-            // Hide BottomBar on Settings screen
-            val isSettings = currentDestination?.hasRoute<Screen.Settings>() == true
-            
-            if (!isSettings) {
+            if (isCompactWidth && !isSettings) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.height(90.dp)
                 ) {
-                    val items = listOf(
-                        Triple(Screen.Clock, Icons.Filled.Schedule, "Clock"),
-                        Triple(Screen.WorldClock, Icons.Filled.Public, "World"),
-                        Triple(Screen.Alarm, Icons.Filled.AccessAlarm, "Alarm"),
-                        Triple(Screen.Timer, Icons.Filled.HourglassEmpty, "Timer"),
-                        Triple(Screen.Stopwatch, Icons.Filled.Timer, "Stopwatch")
-                    )
-
                     items.forEach { (screen, icon, label) ->
                         NavigationBarItem(
                             icon = { Icon(icon, contentDescription = label) },
@@ -352,40 +373,74 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Clock,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable<Screen.Clock> { ClockScreen() }
-            composable<Screen.WorldClock> { com.suvojeet.clock.ui.clock.WorldClockScreen(navController) }
-            composable<Screen.AddLocation> { 
-                com.suvojeet.clock.ui.clock.AddLocationScreen(navController) 
-            }
-            composable<Screen.Alarm> { AlarmScreen() }
-            composable<Screen.Timer> { TimerScreen() }
-            composable<Screen.Stopwatch> { StopwatchScreen() }
-            composable<Screen.Settings> { 
-                com.suvojeet.clock.ui.settings.SettingsScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onLinkAlexaClick = onLinkAlexaClick,
-                    onSleepTimerClick = { navController.navigate(Screen.SleepTimer) }
-                ) 
-            }
-            composable<Screen.SleepTimer> {
-                com.suvojeet.clock.ui.sleeptimer.SleepTimerScreen(
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
-            composable<Screen.Setup> {
-                com.suvojeet.clock.ui.setup.SetupScreen(
-                    onSetupComplete = {
-                        onSetupComplete()
-                        navController.navigate(Screen.Clock) {
-                            popUpTo(0) { inclusive = true }
-                        }
+        Row(modifier = Modifier.fillMaxSize()) { // Use Row for wider screens
+            if (!isCompactWidth && !isSettings) {
+                NavigationRail(
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    items.forEach { (screen, icon, label) ->
+                        NavigationRailItem(
+                            icon = { Icon(icon, contentDescription = label) },
+                            label = { Text(text = label, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                            selected = currentDestination?.hierarchy?.any { it.hasRoute(screen::class) } == true,
+                            onClick = {
+                                navController.navigate(screen) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
                     }
-                )
+                }
+            }
+
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Clock,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = if (isCompactWidth) innerPadding.calculateBottomPadding() else 0.dp,
+                        start = if (isCompactWidth) innerPadding.calculateStartPadding(androidx.compose.ui.unit.LayoutDirection.Ltr) else 0.dp,
+                        end = if (isCompactWidth) innerPadding.calculateEndPadding(androidx.compose.ui.unit.LayoutDirection.Ltr) else 0.dp
+                    )
+            ) {
+                composable<Screen.Clock> { ClockScreen() }
+                composable<Screen.WorldClock> { com.suvojeet.clock.ui.clock.WorldClockScreen(navController) }
+                composable<Screen.AddLocation> { 
+                    com.suvojeet.clock.ui.clock.AddLocationScreen(navController) 
+                }
+                composable<Screen.Alarm> { AlarmScreen() }
+                composable<Screen.Timer> { TimerScreen() }
+                composable<Screen.Stopwatch> { StopwatchScreen() }
+                composable<Screen.Settings> { 
+                    com.suvojeet.clock.ui.settings.SettingsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onLinkAlexaClick = onLinkAlexaClick,
+                        onSleepTimerClick = { navController.navigate(Screen.SleepTimer) }
+                    ) 
+                }
+                composable<Screen.SleepTimer> {
+                    com.suvojeet.clock.ui.sleeptimer.SleepTimerScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable<Screen.Setup> {
+                    com.suvojeet.clock.ui.setup.SetupScreen(
+                        onSetupComplete = {
+                            onSetupComplete()
+                            navController.navigate(Screen.Clock) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
         }
     }
